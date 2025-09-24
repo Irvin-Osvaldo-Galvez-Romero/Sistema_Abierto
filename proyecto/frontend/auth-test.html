@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prueba Auth - Registro y Login</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";padding:24px;max-width:920px;margin:0 auto;background:#f7f7f8}
+    h1{margin:0 0 16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    form{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px}
+    label{display:block;margin-top:8px;font-weight:600}
+    input{width:100%;padding:8px 10px;margin-top:6px;border:1px solid #ccc;border-radius:6px}
+    button{margin-top:12px;padding:10px 14px;border:0;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer}
+    pre{background:#0b1020;color:#d1e7ff;padding:12px;border-radius:6px;overflow:auto}
+    .ok{color:#16a34a}
+    .err{color:#dc2626}
+  </style>
+</head>
+<body>
+  <h1>Prueba de API de Autenticación</h1>
+  <p>API objetivo: <strong id="api">http://localhost:4000</strong></p>
+  <div class="grid">
+    <form id="form-register">
+      <h2>Registro de Alumno</h2>
+      <label>Correo<input name="correo" type="email" required /></label>
+      <label>Contraseña<input name="contrasena" type="password" required minlength="8" /></label>
+      <label>Nombre<input name="nombre" required /></label>
+      <label>Apellidos<input name="apellidos" required /></label>
+      <label>Matrícula<input name="matricula" required /></label>
+      <label>ID Programa<input name="programaId" type="number" required min="1" /></label>
+      <label>Semestre<input name="semestre" type="number" min="1" max="20" /></label>
+      <button type="submit">Registrar</button>
+      <div id="reg-status"></div>
+      <pre id="reg-out"></pre>
+    </form>
+
+    <form id="form-login">
+      <h2>Login</h2>
+      <label>Correo<input name="correo" type="email" required /></label>
+      <label>Contraseña<input name="contrasena" type="password" required minlength="8" /></label>
+      <button type="submit">Ingresar</button>
+      <div id="log-status"></div>
+      <pre id="log-out"></pre>
+      <h3>Token actual</h3>
+      <pre id="token"></pre>
+      <button id="btn-me" type="button">/auth/me</button>
+      <pre id="me-out"></pre>
+      <button id="btn-refresh" type="button">/auth/refresh</button>
+      <pre id="refresh-out"></pre>
+    </form>
+  </div>
+
+  <script>
+    const API = document.getElementById('api').textContent.trim();
+    let accessToken = '';
+    let refreshToken = '';
+
+    async function call(path, method, body, withAuth=false){
+      const res = await fetch(API + path, {
+        method,
+        headers: Object.assign(
+          { 'Content-Type':'application/json' },
+          withAuth && accessToken ? { 'Authorization': 'Bearer ' + accessToken } : {}
+        ),
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const text = await res.text();
+      try { return { ok: res.ok, status: res.status, data: JSON.parse(text) }; }
+      catch { return { ok: res.ok, status: res.status, data: text }; }
+    }
+
+    document.getElementById('form-register').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = new FormData(e.currentTarget);
+      const payload = {
+        correo: f.get('correo'),
+        contrasena: f.get('contrasena'),
+        nombre: f.get('nombre'),
+        apellidos: f.get('apellidos'),
+        matricula: f.get('matricula'),
+        programaId: Number(f.get('programaId')),
+        semestre: f.get('semestre') ? Number(f.get('semestre')) : undefined
+      };
+      const r = await call('/auth/register','POST',payload);
+      document.getElementById('reg-status').textContent = r.ok ? '✓ Registro OK' : '✗ Error';
+      document.getElementById('reg-status').className = r.ok ? 'ok' : 'err';
+      document.getElementById('reg-out').textContent = JSON.stringify(r, null, 2);
+      if(r.ok && r.data){
+        accessToken = r.data.token || '';
+        refreshToken = r.data.refreshToken || '';
+        document.getElementById('token').textContent = accessToken;
+      }
+    });
+
+    document.getElementById('form-login').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = new FormData(e.currentTarget);
+      const payload = {
+        correo: f.get('correo'),
+        contrasena: f.get('contrasena')
+      };
+      const r = await call('/auth/login','POST',payload);
+      document.getElementById('log-status').textContent = r.ok ? '✓ Login OK' : '✗ Error';
+      document.getElementById('log-status').className = r.ok ? 'ok' : 'err';
+      document.getElementById('log-out').textContent = JSON.stringify(r, null, 2);
+      if(r.ok && r.data){
+        accessToken = r.data.token || '';
+        refreshToken = r.data.refreshToken || '';
+        document.getElementById('token').textContent = accessToken;
+      }
+    });
+
+    document.getElementById('btn-me').addEventListener('click', async ()=>{
+      const r = await call('/auth/me','GET',undefined,true);
+      document.getElementById('me-out').textContent = JSON.stringify(r, null, 2);
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', async ()=>{
+      if(!refreshToken){
+        document.getElementById('refresh-out').textContent = 'No hay refreshToken';
+        return;
+      }
+      const r = await call('/auth/refresh','POST',{ refreshToken });
+      document.getElementById('refresh-out').textContent = JSON.stringify(r, null, 2);
+      if(r.ok && r.data?.token){
+        accessToken = r.data.token;
+        document.getElementById('token').textContent = accessToken;
+      }
+    });
+  </script>
+</body>
+</html>
+
+
