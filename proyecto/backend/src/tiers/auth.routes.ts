@@ -77,6 +77,16 @@ authRouter.post('/register', async (req, res) => {
 
       await tx.commit();
 
+      // Asignar rol de Alumno por defecto al registrarse
+      const rolQ = await pool.request().query("SELECT id FROM roles WHERE nombre = 'Alumno'");
+      if (rolQ.recordset.length) {
+        const rolId = rolQ.recordset[0].id;
+        await pool.request()
+          .input('usuario_id', sql.BigInt, userId)
+          .input('rol_id', sql.BigInt, rolId)
+          .query('INSERT INTO usuarios_roles (usuario_id, rol_id) VALUES (@usuario_id, @rol_id)');
+      }
+
       const accessToken = jwt.sign({ sub: userId, correo }, process.env.JWT_SECRET || 'dev_secret', {
         expiresIn: '1h'
       });
@@ -85,7 +95,7 @@ authRouter.post('/register', async (req, res) => {
       });
 
       res.status(201).json({
-        usuario: { id: userId, correo, nombre, apellidos, matricula },
+        usuario: { id: userId, correo, nombre, apellidos, matricula, roles: ['Alumno'], tipo: 'alumno' },
         token: accessToken,
         refreshToken
       });
@@ -116,10 +126,52 @@ authRouter.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(contrasena, user.hash_contrasena);
     if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
 
+    // Obtener roles del usuario
+    const rolesQ = await pool
+      .request()
+      .input('usuario_id', sql.BigInt, user.id)
+      .query(`
+        SELECT r.nombre, r.id
+        FROM usuarios_roles ur
+        INNER JOIN roles r ON r.id = ur.rol_id
+        WHERE ur.usuario_id = @usuario_id
+      `);
+    
+    const roles = rolesQ.recordset.map((r: any) => r.nombre);
+    const tipoUsuario = roles.includes('Administrador') ? 'admin' 
+                      : roles.includes('Docente') ? 'docente'
+                      : roles.includes('Administrativo') ? 'docente'
+                      : 'alumno';
+
+    // Si es alumno, obtener la matrícula
+    let matricula = null;
+    if (tipoUsuario === 'alumno') {
+      const alumnoQ = await pool
+        .request()
+        .input('usuario_id', sql.BigInt, user.id)
+        .query('SELECT matricula FROM alumnos WHERE usuario_id = @usuario_id');
+      
+      if (alumnoQ.recordset.length) {
+        matricula = alumnoQ.recordset[0].matricula;
+      }
+    }
+
     const secret = process.env.JWT_SECRET || 'dev_secret';
     const token = jwt.sign({ sub: user.id, correo }, secret, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ sub: user.id }, process.env.JWT_REFRESH_SECRET || secret, { expiresIn: '7d' });
-    res.json({ token, refreshToken, usuario: { id: user.id, correo, nombre: user.nombre, apellidos: user.apellidos } });
+    res.json({ 
+      token, 
+      refreshToken, 
+      usuario: { 
+        id: user.id, 
+        correo, 
+        nombre: user.nombre, 
+        apellidos: user.apellidos,
+        roles,
+        tipo: tipoUsuario,
+        matricula: matricula
+      } 
+    });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Error del servidor' });

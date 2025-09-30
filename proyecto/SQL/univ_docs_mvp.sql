@@ -99,16 +99,39 @@ CREATE TABLE tipos_documento (
     requiere_ocr BIT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE requisitos_tramite (
-    id BIGINT IDENTITY PRIMARY KEY,
-    tipo_tramite_id BIGINT NOT NULL FOREIGN KEY REFERENCES tipos_tramite(id),
-    programa_id BIGINT NULL FOREIGN KEY REFERENCES programas(id),
-    tipo_documento_id BIGINT NOT NULL FOREIGN KEY REFERENCES tipos_documento(id),
-    obligatorio BIT NOT NULL DEFAULT 1,
-    orden INT NOT NULL DEFAULT 1
-);
+-- Eliminar índice anterior si existe
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_req_tramite' AND object_id = OBJECT_ID('requisitos_tramite'))
+    DROP INDEX UX_req_tramite ON requisitos_tramite;
+GO
+
+-- Crear tabla si no existe
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'requisitos_tramite')
+BEGIN
+    CREATE TABLE requisitos_tramite (
+        id BIGINT IDENTITY PRIMARY KEY,
+        tipo_tramite_id BIGINT NOT NULL FOREIGN KEY REFERENCES tipos_tramite(id),
+        programa_id BIGINT NULL FOREIGN KEY REFERENCES programas(id),
+        tipo_documento_id BIGINT NOT NULL FOREIGN KEY REFERENCES tipos_documento(id),
+        obligatorio BIT NOT NULL DEFAULT 1,
+        orden INT NOT NULL DEFAULT 1,
+        -- Columna computada para manejar NULLs en el índice único
+        programa_id_computed AS ISNULL(programa_id, 0) PERSISTED
+    );
+END
+GO
+
+-- Agregar columna computada si no existe (para tablas existentes)
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('requisitos_tramite') AND name = 'programa_id_computed')
+BEGIN
+    ALTER TABLE requisitos_tramite
+    ADD programa_id_computed AS ISNULL(programa_id, 0) PERSISTED;
+END
+GO
+
+-- Crear índice único
 CREATE UNIQUE INDEX UX_req_tramite
-ON requisitos_tramite(tipo_tramite_id, ISNULL(programa_id, 0), tipo_documento_id, orden);
+ON requisitos_tramite(tipo_tramite_id, programa_id_computed, tipo_documento_id, orden);
+GO
 
 CREATE TABLE pasos_flujo (
     id BIGINT IDENTITY PRIMARY KEY,

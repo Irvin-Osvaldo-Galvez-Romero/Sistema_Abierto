@@ -34,8 +34,9 @@ Relaciones:
 ### Trámites (catálogos y flujos)
 - `tipos_tramite` (`id`, `clave (UQ)`, `nombre`, `descripcion`, `sla_dias`, `activo`)
 - `tipos_documento` (`id`, `clave (UQ)`, `nombre`, `mimes_permitidos`, `tam_max_mb`, `requiere_ocr`)
-- `requisitos_tramite` (`id`, `tipo_tramite_id (FK)`, `programa_id (FK|NULL)`, `tipo_documento_id (FK)`, `obligatorio`, `orden`)
-  - Índices: UQ `(tipo_tramite_id, ISNULL(programa_id,0), tipo_documento_id, orden)`
+- `requisitos_tramite` (`id`, `tipo_tramite_id (FK)`, `programa_id (FK|NULL)`, `tipo_documento_id (FK)`, `obligatorio`, `orden`, `programa_id_computed`)
+  - Columna computada: `programa_id_computed AS ISNULL(programa_id, 0) PERSISTED`
+  - Índices: UQ `(tipo_tramite_id, programa_id_computed, tipo_documento_id, orden)`
 - `pasos_flujo` (`id`, `tipo_tramite_id (FK)`, `orden`, `nombre`, `rol_requerido`, `regla_asignacion`)
   - Índices: UQ `(tipo_tramite_id, orden)`
 
