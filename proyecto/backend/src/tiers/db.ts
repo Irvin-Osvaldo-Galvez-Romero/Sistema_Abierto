@@ -1,5 +1,8 @@
 import sql from 'mssql';
 
+const useSqlAuth = (process.env.SQL_AUTH || '').toLowerCase() === 'sql';
+
+// Config base compatible con driver 'tedious'. Para SQL Auth se pasan credenciales.
 const config: sql.config = {
   server: process.env.SQL_SERVER || 'SARFERT',
   database: process.env.SQL_DATABASE || 'univ_docs',
@@ -7,14 +10,10 @@ const config: sql.config = {
     trustServerCertificate: true,
     encrypt: false
   },
-  authentication: {
-    type: process.env.SQL_AUTH === 'sql' ? 'default' : 'ntlm',
-    options:
-      process.env.SQL_AUTH === 'sql'
-        ? { userName: process.env.SQL_USER || 'sa', password: process.env.SQL_PASSWORD || '' }
-        : { domain: process.env.SQL_DOMAIN || undefined, userName: process.env.SQL_WINUSER || undefined, password: process.env.SQL_WINPASS || undefined }
-  },
-  port: process.env.SQL_PORT ? Number(process.env.SQL_PORT) : 1433
+  port: process.env.SQL_PORT ? Number(process.env.SQL_PORT) : 1433,
+  ...(useSqlAuth
+    ? { user: process.env.SQL_USER || 'sa', password: process.env.SQL_PASSWORD || '' }
+    : {})
 };
 
 let pool: sql.ConnectionPool | null = null;

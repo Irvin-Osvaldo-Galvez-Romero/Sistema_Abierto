@@ -3,58 +3,179 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prueba Auth - Registro y Login</title>
+  <title>Universidad - Acceso</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";padding:24px;max-width:920px;margin:0 auto;background:#f7f7f8}
-    h1{margin:0 0 16px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-    form{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px}
-    label{display:block;margin-top:8px;font-weight:600}
-    input{width:100%;padding:8px 10px;margin-top:6px;border:1px solid #ccc;border-radius:6px}
-    button{margin-top:12px;padding:10px 14px;border:0;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer}
-    pre{background:#0b1020;color:#d1e7ff;padding:12px;border-radius:6px;overflow:auto}
-    .ok{color:#16a34a}
-    .err{color:#dc2626}
+    :root{
+      --green: #2E8B57;         /* Verde Principal */
+      --green-light: #66BB6A;   /* Acento/Éxito */
+      --green-dark: #1E5E3C;    /* Primario Oscuro */
+      --bg: #F5F5F5;            /* Fondo */
+      --gray: #757575;          /* Texto secundario/Bordes */
+      --black: #212121;         /* Texto principal */
+      --blue: #2196F3;          /* Enlaces/Info */
+      --yellow: #FFC107;        /* Advertencia */
+      --red: #EF5350;           /* Error */
+      --white: #FFFFFF;
+    }
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";margin:0;background:var(--bg);color:var(--black)}
+    .wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+    .card{width:100%;max-width:980px;background:var(--white);border:1px solid #e7e7e7;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+    .header{background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;padding:24px 28px;display:flex;align-items:center;gap:16px}
+    .logo{width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.15);display:grid;place-items:center;font-weight:800}
+    .title{margin:0;font-size:20px}
+    .subtitle{margin:2px 0 0;color:#e8f5e9}
+    .content{display:grid;grid-template-columns:1.1fr .9fr}
+    @media (max-width: 900px){ .content{grid-template-columns:1fr} }
+    .left{padding:24px 28px;border-right:1px solid #efefef}
+    @media (max-width: 900px){ .left{border-right:0;border-bottom:1px solid #efefef} }
+    .right{padding:24px 28px}
+    .tabs{display:flex;background:#f7faf8;border:1px solid #e4e7e7;border-radius:10px;padding:4px;gap:6px}
+    .tab{flex:1;text-align:center;padding:10px 12px;border-radius:8px;font-weight:600;color:var(--green-dark);cursor:pointer;user-select:none}
+    .tab.active{background:var(--green);color:#fff}
+    form{margin-top:16px}
+    label{display:block;margin-top:10px;font-weight:600;color:var(--black)}
+    .hint{font-weight:500;color:var(--gray);font-size:12px;margin-top:4px}
+    input{width:100%;padding:12px 12px;margin-top:6px;border:1px solid #ddd;border-radius:10px;outline:0;transition:border .15s, box-shadow .15s;background:#fff;color:var(--black)}
+    input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(46,139,87,.12)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:flex;align-items:center;gap:12px;margin-top:16px}
+    .btn{padding:12px 16px;border:0;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn-primary{background:var(--green);color:#fff}
+    .btn-primary:hover{background:var(--green-dark)}
+    .btn-outline{background:#fff;color:var(--green-dark);border:1px solid var(--green)}
+    .note{font-size:13px;color:var(--gray)}
+    .status{margin-top:12px;font-weight:700}
+    .status.ok{color:var(--green-light)}
+    .status.err{color:var(--red)}
+    pre{background:#0b1020;color:#d1e7ff;padding:12px;border-radius:10px;overflow:auto;margin-top:10px}
+    .link{color:var(--blue);text-decoration:none}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .pill.warn{background:rgba(255,193,7,.15);color:#7a5c00}
+    .pill.info{background:rgba(33,150,243,.12);color:#0c4a6e}
+    .grid-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+    .kpi{background:#fafafa;border:1px solid #eee;border-radius:12px;padding:12px}
+    .token-box{background:#0b1020;color:#cde6ff;padding:12px;border-radius:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .toast{position:fixed;inset:auto 16px 16px auto;background:var(--green);color:#fff;padding:12px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);opacity:0;transform:translateY(10px);transition:all .2s}
+    .toast.show{opacity:1;transform:translateY(0)}
   </style>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Crect width='100%25' height='100%25' rx='24' fill='%232E8B57'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='64' fill='white'%3EU%3C/text%3E%3C/svg%3E"/>
 </head>
 <body>
-  <h1>Prueba de API de Autenticación</h1>
-  <p>API objetivo: <strong id="api">http://localhost:4000</strong></p>
-  <div class="grid">
-    <form id="form-register">
-      <h2>Registro de Alumno</h2>
-      <label>Correo<input name="correo" type="email" required /></label>
-      <label>Contraseña<input name="contrasena" type="password" required minlength="8" /></label>
-      <label>Nombre<input name="nombre" required /></label>
-      <label>Apellidos<input name="apellidos" required /></label>
-      <label>Matrícula<input name="matricula" required /></label>
-      <label>ID Programa<input name="programaId" type="number" required min="1" /></label>
-      <label>Semestre<input name="semestre" type="number" min="1" max="20" /></label>
-      <button type="submit">Registrar</button>
-      <div id="reg-status"></div>
-      <pre id="reg-out"></pre>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="logo">U</div>
+        <div>
+          <h1 class="title">Sistema de Documentos Universitarios</h1>
+          <p class="subtitle">Accede para gestionar tus trámites y documentos</p>
+        </div>
+      </div>
+      <div class="content">
+        <div class="left">
+          <div class="tabs" role="tablist" aria-label="Acceso">
+            <div class="tab active" role="tab" aria-selected="true" tabindex="0" data-tab="login">Iniciar sesión</div>
+            <div class="tab" role="tab" aria-selected="false" tabindex="-1" data-tab="register">Crear cuenta</div>
+          </div>
+
+          <form id="form-login" autocomplete="on">
+            <label>Correo institucional
+              <input name="correo" type="email" required placeholder="alumno@uni.mx" />
+            </label>
+            <label>Contraseña
+              <input name="contrasena" type="password" required minlength="8" placeholder="••••••••" />
+              <div class="hint">Mínimo 8 caracteres</div>
+            </label>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">Ingresar</button>
+              <a class="link" href="#" id="go-register">¿No tienes cuenta? Regístrate</a>
+            </div>
+            <div id="log-status" class="status"></div>
+            <pre id="log-out" hidden></pre>
     </form>
 
-    <form id="form-login">
-      <h2>Login</h2>
-      <label>Correo<input name="correo" type="email" required /></label>
-      <label>Contraseña<input name="contrasena" type="password" required minlength="8" /></label>
-      <button type="submit">Ingresar</button>
-      <div id="log-status"></div>
-      <pre id="log-out"></pre>
-      <h3>Token actual</h3>
-      <pre id="token"></pre>
-      <button id="btn-me" type="button">/auth/me</button>
-      <pre id="me-out"></pre>
-      <button id="btn-refresh" type="button">/auth/refresh</button>
+          <form id="form-register" autocomplete="on" style="display:none">
+            <div class="row">
+              <label>Nombre
+                <input name="nombre" required placeholder="Ana" />
+              </label>
+              <label>Apellidos
+                <input name="apellidos" required placeholder="García" />
+              </label>
+            </div>
+            <label>Correo institucional
+              <input name="correo" type="email" required placeholder="alumno@uni.mx" />
+            </label>
+            <div class="row">
+              <label>Contraseña
+                <input name="contrasena" type="password" required minlength="8" placeholder="••••••••" />
+                <div class="hint">Usa una contraseña segura</div>
+              </label>
+              <label>Semestre
+                <input name="semestre" type="number" min="1" max="20" placeholder="1" />
+              </label>
+            </div>
+            <div class="row">
+              <label>Matrícula
+                <input name="matricula" required placeholder="A0001" />
+              </label>
+              <label>ID Programa
+                <input name="programaId" type="number" required min="1" placeholder="1" />
+              </label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">Crear cuenta</button>
+              <a class="link" href="#" id="go-login">¿Ya tienes cuenta? Inicia sesión</a>
+            </div>
+            <div id="reg-status" class="status"></div>
+            <pre id="reg-out" hidden></pre>
+          </form>
+        </div>
+        <div class="right">
+          <span class="pill info">API</span>
+          <p style="margin:8px 0 12px">Base URL: <strong id="api">http://localhost:4000</strong></p>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div style="color:var(--gray);font-size:12px">Estado</div>
+              <div id="health" style="font-weight:800;color:var(--green-dark)">Comprobando…</div>
+            </div>
+            <div class="kpi">
+              <div style="color:var(--gray);font-size:12px">Token (JWT)</div>
+              <div style="font-weight:800;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="token-short">—</div>
+            </div>
+            <div class="kpi">
+              <div style="color:var(--gray);font-size:12px">Acciones rápidas</div>
+              <div class="grid-mini">
+                <button id="btn-me" class="btn btn-outline" type="button">/auth/me</button>
+                <button id="btn-refresh" class="btn btn-outline" type="button">/auth/refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="margin:18px 0 8px;color:var(--green-dark)">Detalles</h3>
+          <div class="token-box" id="token" style="min-height:52px"></div>
+          <pre id="me-out" style="margin-top:12px"></pre>
       <pre id="refresh-out"></pre>
-    </form>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <div class="toast" id="toast">Listo</div>
 
   <script>
     const API = document.getElementById('api').textContent.trim();
     let accessToken = '';
     let refreshToken = '';
+
+    function showToast(message){
+      const t = document.getElementById('toast');
+      t.textContent = message;
+      t.classList.add('show');
+      setTimeout(()=> t.classList.remove('show'), 1800);
+    }
 
     async function call(path, method, body, withAuth=false){
       const res = await fetch(API + path, {
@@ -70,7 +191,37 @@
       catch { return { ok: res.ok, status: res.status, data: text }; }
     }
 
-    document.getElementById('form-register').addEventListener('submit', async (e)=>{
+    // Tabs
+    const tabs = document.querySelectorAll('.tab');
+    const formLogin = document.getElementById('form-login');
+    const formRegister = document.getElementById('form-register');
+    function activate(tab){
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      const isLogin = tab?.dataset.tab === 'login';
+      formLogin.style.display = isLogin ? '' : 'none';
+      formRegister.style.display = isLogin ? 'none' : '';
+      tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+    }
+    tabs.forEach(t => t.addEventListener('click', ()=> activate(t)));
+    document.getElementById('go-register').addEventListener('click', (e)=>{ e.preventDefault(); activate(tabs[1]); });
+    document.getElementById('go-login').addEventListener('click', (e)=>{ e.preventDefault(); activate(tabs[0]); });
+
+    // Health check
+    (async ()=>{
+      try{
+        const r = await fetch(API + '/health');
+        document.getElementById('health').textContent = r.ok ? 'OK' : 'Error';
+        if(!r.ok){
+          document.getElementById('health').style.color = 'var(--red)';
+        }
+      }catch{
+        document.getElementById('health').textContent = 'Sin conexión';
+        document.getElementById('health').style.color = 'var(--red)';
+      }
+    })();
+
+    // Registro
+    formRegister.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = new FormData(e.currentTarget);
       const payload = {
@@ -83,17 +234,23 @@
         semestre: f.get('semestre') ? Number(f.get('semestre')) : undefined
       };
       const r = await call('/auth/register','POST',payload);
-      document.getElementById('reg-status').textContent = r.ok ? '✓ Registro OK' : '✗ Error';
-      document.getElementById('reg-status').className = r.ok ? 'ok' : 'err';
+      const status = document.getElementById('reg-status');
+      status.textContent = r.ok ? '✓ Registro exitoso' : `✗ Error (${r.status})`;
+      status.className = 'status ' + (r.ok ? 'ok' : 'err');
+      document.getElementById('reg-out').hidden = false;
       document.getElementById('reg-out').textContent = JSON.stringify(r, null, 2);
       if(r.ok && r.data){
         accessToken = r.data.token || '';
         refreshToken = r.data.refreshToken || '';
         document.getElementById('token').textContent = accessToken;
+        document.getElementById('token-short').textContent = accessToken ? accessToken.slice(0,24) + '…' : '—';
+        showToast('Cuenta creada');
+        activate(tabs[0]);
       }
     });
 
-    document.getElementById('form-login').addEventListener('submit', async (e)=>{
+    // Login
+    formLogin.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const f = new FormData(e.currentTarget);
       const payload = {
@@ -101,16 +258,21 @@
         contrasena: f.get('contrasena')
       };
       const r = await call('/auth/login','POST',payload);
-      document.getElementById('log-status').textContent = r.ok ? '✓ Login OK' : '✗ Error';
-      document.getElementById('log-status').className = r.ok ? 'ok' : 'err';
+      const status = document.getElementById('log-status');
+      status.textContent = r.ok ? '✓ Bienvenido' : `✗ Error (${r.status})`;
+      status.className = 'status ' + (r.ok ? 'ok' : 'err');
+      document.getElementById('log-out').hidden = false;
       document.getElementById('log-out').textContent = JSON.stringify(r, null, 2);
       if(r.ok && r.data){
         accessToken = r.data.token || '';
         refreshToken = r.data.refreshToken || '';
         document.getElementById('token').textContent = accessToken;
+        document.getElementById('token-short').textContent = accessToken ? accessToken.slice(0,24) + '…' : '—';
+        showToast('Sesión iniciada');
       }
     });
 
+    // Acciones rápidas
     document.getElementById('btn-me').addEventListener('click', async ()=>{
       const r = await call('/auth/me','GET',undefined,true);
       document.getElementById('me-out').textContent = JSON.stringify(r, null, 2);
@@ -126,6 +288,8 @@
       if(r.ok && r.data?.token){
         accessToken = r.data.token;
         document.getElementById('token').textContent = accessToken;
+        document.getElementById('token-short').textContent = accessToken ? accessToken.slice(0,24) + '…' : '—';
+        showToast('Token actualizado');
       }
     });
   </script>
