@@ -1,0 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const student_controller_1 = require("../controllers/student.controller");
+const validation_middleware_1 = require("../middleware/validation.middleware");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const client_1 = require("@prisma/client");
+const student_validators_1 = require("../validators/student.validators");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.get('/my-profile', (0, auth_middleware_1.authorize)(client_1.Rol.ESTUDIANTE), student_controller_1.StudentController.getMyProfile);
+router.get('/generate-matricula', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO), student_controller_1.StudentController.generateMatricula);
+router.get('/search', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO, client_1.Rol.PROFESOR), (0, validation_middleware_1.validate)(student_validators_1.searchStudentsSchema), student_controller_1.StudentController.search);
+router.get('/', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO, client_1.Rol.PROFESOR), (0, validation_middleware_1.validate)(student_validators_1.paginationSchema), student_controller_1.StudentController.getAll);
+router.post('/', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO), (0, validation_middleware_1.validate)(student_validators_1.createStudentSchema), student_controller_1.StudentController.create);
+router.get('/matricula/:matricula', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO, client_1.Rol.PROFESOR), (0, validation_middleware_1.validate)(student_validators_1.getStudentByMatriculaSchema), student_controller_1.StudentController.getByMatricula);
+router.get('/:id', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO, client_1.Rol.PROFESOR), (0, validation_middleware_1.validate)(student_validators_1.getStudentByIdSchema), student_controller_1.StudentController.getById);
+router.put('/:id', (0, auth_middleware_1.authorize)(client_1.Rol.ADMINISTRADOR, client_1.Rol.SUPER_ADMIN, client_1.Rol.PERSONAL_ADMINISTRATIVO), (0, validation_middleware_1.validate)(student_validators_1.updateStudentSchema), student_controller_1.StudentController.update);
+router.delete('/:id', (0, auth_middleware_1.authorize)(client_1.Rol.SUPER_ADMIN, client_1.Rol.ADMINISTRADOR), (0, validation_middleware_1.validate)(student_validators_1.getStudentByIdSchema), student_controller_1.StudentController.delete);
+exports.default = router;
+//# sourceMappingURL=student.routes.js.map

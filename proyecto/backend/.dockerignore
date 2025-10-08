@@ -1,0 +1,49 @@
+# Ignorar archivos innecesarios en la imagen Docker
+
+# Node modules
+node_modules
+npm-debug.log
+
+# Archivos de build
+dist
+build
+*.tsbuildinfo
+
+# Archivos de ambiente
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage
+.nyc_output
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Otros
+README.md
+.editorconfig
+.prettierrc
+.eslintrc
+test-connection.js
+

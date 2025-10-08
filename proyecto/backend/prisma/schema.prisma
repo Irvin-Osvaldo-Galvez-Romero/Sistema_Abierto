@@ -1,0 +1,416 @@
+// ==========================================
+// Esquema de Base de Datos - Prisma ORM
+// Sistema Universitario de Gestión Documental
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ==========================================
+// MODELOS DE AUTENTICACIÓN Y USUARIOS
+// ==========================================
+
+model Usuario {
+  id                String              @id @default(uuid())
+  email             String              @unique
+  password          String
+  nombre            String
+  apellidoPaterno   String
+  apellidoMaterno   String?
+  telefono          String?
+  rol               Rol                 @default(ESTUDIANTE)
+  activo            Boolean             @default(true)
+  emailVerificado   Boolean             @default(false)
+  intentosFallidos  Int                 @default(0)
+  bloqueadoHasta    DateTime?
+  ultimoAcceso      DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relaciones
+  estudiante        Estudiante?
+  profesor          Profesor?
+  administrador     Administrador?
+  tokens            TokenSesion[]
+  actividades       ActividadUsuario[]
+  documentosCreados Documento[]         @relation("DocumentoCreador")
+
+  @@map("usuarios")
+}
+
+enum Rol {
+  SUPER_ADMIN
+  ADMINISTRADOR
+  PROFESOR
+  ESTUDIANTE
+  PERSONAL_ADMINISTRATIVO
+}
+
+model TokenSesion {
+  id             String   @id @default(uuid())
+  token          String   @unique
+  tipo           TipoToken
+  expiraEn       DateTime
+  revocado       Boolean  @default(false)
+  ipAddress      String?
+  userAgent      String?
+  
+  usuarioId      String
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime @default(now())
+
+  @@map("tokens_sesion")
+}
+
+enum TipoToken {
+  ACCESS
+  REFRESH
+  RESET_PASSWORD
+  VERIFY_EMAIL
+}
+
+// ==========================================
+// MODELOS DE ESTUDIANTES
+// ==========================================
+
+model Estudiante {
+  id                String              @id @default(uuid())
+  matricula         String              @unique
+  fechaNacimiento   DateTime?
+  curp              String?             @unique
+  nss               String?
+  direccion         String?
+  ciudad            String?
+  estado            String?
+  codigoPostal      String?
+  tutorNombre       String?
+  tutorTelefono     String?
+  tutorEmail        String?
+  estatus           EstatusEstudiante   @default(ACTIVO)
+  fechaIngreso      DateTime            @default(now())
+  fechaEgreso       DateTime?
+  
+  usuarioId         String              @unique
+  usuario           Usuario             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  carreraId         String?
+  carrera           Carrera?            @relation(fields: [carreraId], references: [id])
+  
+  // Relaciones
+  inscripciones     Inscripcion[]
+  calificaciones    Calificacion[]
+  documentos        DocumentoEstudiante[]
+  notificaciones    Notificacion[]
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@map("estudiantes")
+}
+
+enum EstatusEstudiante {
+  ACTIVO
+  INACTIVO
+  EGRESADO
+  BAJA_TEMPORAL
+  BAJA_DEFINITIVA
+}
+
+// ==========================================
+// MODELOS ACADÉMICOS
+// ==========================================
+
+model Carrera {
+  id                String        @id @default(uuid())
+  clave             String        @unique
+  nombre            String
+  descripcion       String?
+  duracionSemestres Int
+  creditos          Int
+  modalidad         Modalidad
+  activo            Boolean       @default(true)
+  
+  // Relaciones
+  estudiantes       Estudiante[]
+  materias          Materia[]
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("carreras")
+}
+
+enum Modalidad {
+  PRESENCIAL
+  EN_LINEA
+  MIXTA
+}
+
+model Materia {
+  id              String            @id @default(uuid())
+  clave           String            @unique
+  nombre          String
+  descripcion     String?
+  creditos        Int
+  semestre        Int
+  horasTeoria     Int
+  horasPractica   Int
+  activo          Boolean           @default(true)
+  
+  carreraId       String
+  carrera         Carrera           @relation(fields: [carreraId], references: [id])
+  
+  // Relaciones
+  grupos          Grupo[]
+  calificaciones  Calificacion[]
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@map("materias")
+}
+
+model Grupo {
+  id              String        @id @default(uuid())
+  clave           String        @unique
+  periodo         String
+  cupoMaximo      Int
+  cupoDisponible  Int
+  horario         String
+  aula            String?
+  activo          Boolean       @default(true)
+  
+  materiaId       String
+  materia         Materia       @relation(fields: [materiaId], references: [id])
+  
+  profesorId      String
+  profesor        Profesor      @relation(fields: [profesorId], references: [id])
+  
+  // Relaciones
+  inscripciones   Inscripcion[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("grupos")
+}
+
+model Inscripcion {
+  id              String              @id @default(uuid())
+  periodo         String
+  estatus         EstatusInscripcion  @default(INSCRITO)
+  fechaInscripcion DateTime           @default(now())
+  
+  estudianteId    String
+  estudiante      Estudiante          @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  
+  grupoId         String
+  grupo           Grupo               @relation(fields: [grupoId], references: [id])
+  
+  // Relaciones
+  calificacion    Calificacion?
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([estudianteId, grupoId, periodo])
+  @@map("inscripciones")
+}
+
+enum EstatusInscripcion {
+  INSCRITO
+  CURSANDO
+  APROBADO
+  REPROBADO
+  BAJA
+}
+
+model Calificacion {
+  id              String    @id @default(uuid())
+  calificacion    Decimal   @db.Decimal(4, 2)
+  estatus         String
+  observaciones   String?
+  
+  estudianteId    String
+  estudiante      Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  
+  materiaId       String
+  materia         Materia   @relation(fields: [materiaId], references: [id])
+  
+  inscripcionId   String    @unique
+  inscripcion     Inscripcion @relation(fields: [inscripcionId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("calificaciones")
+}
+
+// ==========================================
+// MODELOS DE PROFESORES Y PERSONAL
+// ==========================================
+
+model Profesor {
+  id              String    @id @default(uuid())
+  numeroEmpleado  String    @unique
+  especialidad    String?
+  grado           String?
+  departamento    String?
+  activo          Boolean   @default(true)
+  
+  usuarioId       String    @unique
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  // Relaciones
+  grupos          Grupo[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("profesores")
+}
+
+model Administrador {
+  id              String    @id @default(uuid())
+  numeroEmpleado  String    @unique
+  area            String?
+  cargo           String?
+  activo          Boolean   @default(true)
+  
+  usuarioId       String    @unique
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("administradores")
+}
+
+// ==========================================
+// MODELOS DE GESTIÓN DOCUMENTAL
+// ==========================================
+
+model Documento {
+  id                String              @id @default(uuid())
+  folio             String              @unique
+  tipo              TipoDocumento
+  titulo            String
+  descripcion       String?
+  rutaArchivo       String
+  rutaArchivoFirmado String?
+  hashArchivo       String
+  tamanoBytes       Int
+  mimeType          String
+  estatus           EstatusDocumento    @default(PENDIENTE)
+  fechaEmision      DateTime?
+  fechaVencimiento  DateTime?
+  validado          Boolean             @default(false)
+  firmado           Boolean             @default(false)
+  cadenaBlockchain  String?
+  qrCode            String?
+  
+  creadoPorId       String
+  creadoPor         Usuario             @relation("DocumentoCreador", fields: [creadoPorId], references: [id])
+  
+  // Relaciones
+  documentosEstudiante DocumentoEstudiante[]
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@map("documentos")
+}
+
+enum TipoDocumento {
+  KARDEX
+  FICHA_REINSCRIPCION
+  COMPROBANTE_PAGO
+}
+
+enum EstatusDocumento {
+  PENDIENTE
+  EN_REVISION
+  APROBADO
+  RECHAZADO
+  VENCIDO
+  ANULADO
+}
+
+model DocumentoEstudiante {
+  id                  String     @id @default(uuid())
+  observaciones       String?
+  motivoRechazo       String?
+  revisadoPor         String?
+  fechaRevision       DateTime?
+  escaneoVirus        Boolean    @default(false)
+  virusDetectado      Boolean    @default(false)
+  nombreVirusDetectado String?
+  
+  documentoId   String
+  documento     Documento  @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  
+  estudianteId  String
+  estudiante    Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime   @default(now())
+
+  @@unique([documentoId, estudianteId])
+  @@map("documentos_estudiante")
+}
+
+// ==========================================
+// MODELOS DE NOTIFICACIONES
+// ==========================================
+
+model Notificacion {
+  id          String              @id @default(uuid())
+  tipo        TipoNotificacion
+  titulo      String
+  mensaje     String
+  leida       Boolean             @default(false)
+  documentoId String?
+  
+  estudianteId String
+  estudiante   Estudiante         @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime            @default(now())
+
+  @@map("notificaciones")
+}
+
+enum TipoNotificacion {
+  DOCUMENTO_APROBADO
+  DOCUMENTO_RECHAZADO
+  DOCUMENTO_PENDIENTE
+  GENERAL
+}
+
+// ==========================================
+// MODELOS DE AUDITORÍA
+// ==========================================
+
+model ActividadUsuario {
+  id          String   @id @default(uuid())
+  accion      String
+  entidad     String?
+  entidadId   String?
+  descripcion String?
+  ipAddress   String?
+  userAgent   String?
+  
+  usuarioId   String
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+
+  @@map("actividades_usuario")
+}
+

@@ -1,0 +1,156 @@
+/**
+ * Controlador de Autenticación
+ * Maneja las peticiones HTTP relacionadas con autenticación
+ */
+
+import { Request, Response, NextFunction } from 'express';
+import { AuthService } from '../services/auth.service';
+import logger from '../utils/logger';
+
+export class AuthController {
+  /**
+   * POST /api/auth/register
+   * Registrar nuevo usuario
+   */
+  static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await AuthService.register(req.body);
+
+      res.status(201).json({
+        success: true,
+        message: 'Usuario registrado exitosamente',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/login
+   * Iniciar sesión
+   */
+  static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      const userAgent = req.headers['user-agent'];
+
+      const result = await AuthService.login(req.body, ipAddress, userAgent);
+
+      res.status(200).json({
+        success: true,
+        message: 'Inicio de sesión exitoso',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/refresh
+   * Renovar token de acceso
+   */
+  static async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        res.status(400).json({
+          success: false,
+          message: 'Refresh token es requerido',
+        });
+        return;
+      }
+
+      const result = await AuthService.refreshAccessToken(refreshToken);
+
+      res.status(200).json({
+        success: true,
+        message: 'Token renovado exitosamente',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/logout
+   * Cerrar sesión
+   */
+  static async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        res.status(400).json({
+          success: false,
+          message: 'Refresh token es requerido',
+        });
+        return;
+      }
+
+      await AuthService.logout(refreshToken);
+
+      res.status(200).json({
+        success: true,
+        message: 'Sesión cerrada exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/auth/profile
+   * Obtener perfil del usuario autenticado
+   */
+  static async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          message: 'No autenticado',
+        });
+        return;
+      }
+
+      const profile = await AuthService.getProfile(req.user.userId);
+
+      // Remover contraseña del response
+      const { password, ...profileWithoutPassword } = profile;
+
+      res.status(200).json({
+        success: true,
+        data: profileWithoutPassword,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/auth/me
+   * Obtener información básica del usuario autenticado
+   */
+  static async getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          message: 'No autenticado',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: req.user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
