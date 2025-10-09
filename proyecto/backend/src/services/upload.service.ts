@@ -140,6 +140,9 @@ export class UploadService {
       const filepath = path.join(uploadDir, filename);
       await fs.writeFile(filepath, data.file.buffer);
 
+      // Generar ruta relativa para guardar en BD
+      const rutaRelativa = path.join('uploads', data.estudianteId, filename);
+
       // Generar folio único
       const folio = `DOC-${new Date().getFullYear()}-${uuidv4().slice(0, 8).toUpperCase()}`;
 
@@ -149,7 +152,7 @@ export class UploadService {
           folio,
           tipo: data.tipo,
           titulo: this.getTituloByTipo(data.tipo),
-          rutaArchivo: filepath,
+          rutaArchivo: rutaRelativa,
           hashArchivo,
           tamanoBytes: data.file.size,
           mimeType: data.file.mimetype,
