@@ -81,7 +81,7 @@ export const AdminNewProfessorPage: React.FC = () => {
       // Construir el email completo con el dominio del TESCHI
       const emailCompleto = `${formData.emailUsername}@teschi.edu.mx`;
 
-      // 1. Crear usuario
+      // 1. Crear usuario (el correo con credenciales se enviará automáticamente)
       const userResponse = await axios.post(
         'http://localhost:3001/api/auth/register',
         {
@@ -92,6 +92,7 @@ export const AdminNewProfessorPage: React.FC = () => {
           password: formData.password,
           telefono: formData.telefono,
           rol: 'PROFESOR',
+          sendEmail: true, // Enviar correo con credenciales
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -110,7 +111,7 @@ export const AdminNewProfessorPage: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success('¡Docente creado exitosamente!');
+      toast.success('¡Docente creado exitosamente! Se ha enviado un correo con las credenciales de acceso a ' + emailCompleto);
       setShowConfirmDialog(false);
       navigate('/admin/dashboard');
     } catch (error: any) {

@@ -2,7 +2,7 @@ export declare class ProfesorService {
     static crearProfesor(data: {
         usuarioId: string;
         numeroEmpleado: string;
-        especialidad?: string;
+        especialidad: string;
         estatus?: string;
     }): Promise<{
         usuario: {

@@ -6,6 +6,8 @@ export declare class StudentController {
     static getByMatricula(req: Request, res: Response, next: NextFunction): Promise<void>;
     static getMyProfile(req: Request, res: Response, next: NextFunction): Promise<void>;
     static update(req: Request, res: Response, next: NextFunction): Promise<void>;
+    static darDeBaja(req: Request, res: Response, next: NextFunction): Promise<void>;
+    static deletePermanently(req: Request, res: Response, next: NextFunction): Promise<void>;
     static delete(req: Request, res: Response, next: NextFunction): Promise<void>;
     static generateMatricula(req: Request, res: Response, next: NextFunction): Promise<void>;
     static search(req: Request, res: Response, next: NextFunction): Promise<void>;

@@ -367,3 +367,5 @@ Todos los documentos que se suban de ahora en adelante se guardarán automática
 
 **Para probar:** Ve a Estudiantes → Ver Detalles → Documentos → 👁️ Vista Previa / 📥 Descarga
 
+
+

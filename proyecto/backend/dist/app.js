@@ -57,7 +57,9 @@ const calificacion_routes_1 = __importDefault(require("./routes/calificacion.rou
 const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 const notificacion_routes_1 = __importDefault(require("./routes/notificacion.routes"));
 const profesor_routes_1 = __importDefault(require("./routes/profesor.routes"));
+const password_routes_1 = __importDefault(require("./routes/password.routes"));
 app.use('/api/auth', auth_routes_1.default);
+app.use('/api/password', password_routes_1.default);
 app.use('/api/students', student_routes_1.default);
 app.use('/api/profesores', profesor_routes_1.default);
 app.use('/api/carreras', carrera_routes_1.default);

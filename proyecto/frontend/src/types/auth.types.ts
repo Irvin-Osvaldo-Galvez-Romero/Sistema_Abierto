@@ -15,6 +15,7 @@ export interface User {
   email: string;
   nombre: string;
   rol: Rol;
+  primerLogin?: boolean;
 }
 
 export interface AuthTokens {

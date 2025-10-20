@@ -267,7 +267,7 @@ class StudentService {
             throw error;
         }
     }
-    static async delete(id) {
+    static async darDeBaja(id) {
         try {
             const estudiante = await database_1.prisma.estudiante.findUnique({
                 where: { id },
@@ -284,9 +284,53 @@ class StudentService {
             logger_1.default.info(`Estudiante dado de baja: ${estudiante.matricula}`);
         }
         catch (error) {
-            logger_1.default.error('Error al eliminar estudiante:', error);
+            logger_1.default.error('Error al dar de baja estudiante:', error);
             throw error;
         }
+    }
+    static async deletePermanently(id) {
+        try {
+            const estudiante = await database_1.prisma.estudiante.findUnique({
+                where: { id },
+                include: {
+                    usuario: true,
+                },
+            });
+            if (!estudiante) {
+                throw new errors_1.NotFoundError('Estudiante no encontrado');
+            }
+            const usuarioId = estudiante.usuarioId;
+            await database_1.prisma.documentoEstudiante.deleteMany({
+                where: { estudianteId: id },
+            });
+            await database_1.prisma.documento.deleteMany({
+                where: {
+                    documentosEstudiante: {
+                        some: { estudianteId: id },
+                    },
+                },
+            });
+            await database_1.prisma.estudiante.delete({
+                where: { id },
+            });
+            await database_1.prisma.tokenSesion.deleteMany({
+                where: { usuarioId },
+            });
+            await database_1.prisma.actividadUsuario.deleteMany({
+                where: { usuarioId },
+            });
+            await database_1.prisma.usuario.delete({
+                where: { id: usuarioId },
+            });
+            logger_1.default.info(`Estudiante eliminado permanentemente: ${estudiante.matricula}`);
+        }
+        catch (error) {
+            logger_1.default.error('Error al eliminar estudiante permanentemente:', error);
+            throw error;
+        }
+    }
+    static async delete(id) {
+        return this.darDeBaja(id);
     }
     static async generateMatricula() {
         try {

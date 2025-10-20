@@ -1,0 +1,25 @@
+
+═══════════════════════════════════════════════════════
+CREDENCIALES DE CORREO DE PRUEBA - ETHEREAL EMAIL
+═══════════════════════════════════════════════════════
+
+Generadas el: 9/10/2025, 2:33:00 a.m.
+
+SMTP:
+  Host:     smtp.ethereal.email
+  Port:     587
+  Username: rdfbrh6tfu2flhf3@ethereal.email
+  Password: g1tUH8xtXk1XV82Sxx
+
+VER CORREOS EN:
+  URL Directa: https://ethereal.email
+  
+  O en: https://ethereal.email/login
+  Email:    rdfbrh6tfu2flhf3@ethereal.email
+  Password: g1tUH8xtXk1XV82Sxx
+
+NOTA IMPORTANTE:
+Los correos enviados NO llegan a direcciones reales.
+Todos los correos se capturan y puedes verlos en la URL de arriba.
+
+═══════════════════════════════════════════════════════

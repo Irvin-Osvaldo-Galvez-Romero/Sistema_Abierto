@@ -33,11 +33,14 @@ import {
   Cancel,
   Visibility,
   Logout,
+  Download,
+  ViewInAr,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import ConfirmationDialog from '../components/ConfirmationDialog';
 
 interface Documento {
   id: string;
@@ -69,6 +72,8 @@ export const AdminDocumentsPage: React.FC = () => {
   const [approving, setApproving] = useState(true);
   const [motivoRechazo, setMotivoRechazo] = useState('');
   const [tabValue, setTabValue] = useState(0);
+  const [confirmDialog, setConfirmDialog] = useState(false);
+  const [previewDialog, setPreviewDialog] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -121,7 +126,60 @@ export const AdminDocumentsPage: React.FC = () => {
   const openReviewDialog = (doc: Documento, approve: boolean) => {
     setSelectedDoc(doc);
     setApproving(approve);
+    setConfirmDialog(true);
+  };
+
+  const handleConfirmReview = () => {
+    setConfirmDialog(false);
     setReviewDialog(true);
+  };
+
+  const handleViewDocument = async (doc: Documento) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get(
+        `http://localhost:3001/api/upload/view/${doc.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const blobUrl = window.URL.createObjectURL(response.data);
+      const docWithPreview = { ...doc, previewUrl: blobUrl };
+      setSelectedDoc(docWithPreview as any);
+      setPreviewDialog(true);
+    } catch (error: any) {
+      console.error('Error al cargar vista previa:', error);
+      toast.error('No se pudo cargar la vista previa del documento');
+    }
+  };
+
+  const handleDownloadDocument = async (doc: Documento) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get(
+        `http://localhost:3001/api/upload/download/${doc.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.folio}_${doc.tipo}.${doc.mimeType.split('/')[1]}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Documento descargado exitosamente');
+    } catch (error: any) {
+      console.error('Error al descargar:', error);
+      toast.error('No se pudo descargar el documento');
+    }
   };
 
   const getEstatusColor = (estatus: string) => {
@@ -256,29 +314,40 @@ export const AdminDocumentsPage: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell align="center">
-                      {doc.estatus === 'PENDIENTE' && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                          <IconButton
-                            onClick={() => openReviewDialog(doc, true)}
-                            sx={{ color: '#008000' }}
-                            title="Aprobar"
-                          >
-                            <CheckCircle />
-                          </IconButton>
-                          <IconButton
-                            onClick={() => openReviewDialog(doc, false)}
-                            sx={{ color: '#CC0000' }}
-                            title="Rechazar"
-                          >
-                            <Cancel />
-                          </IconButton>
-                        </Box>
-                      )}
-                      {doc.estatus !== 'PENDIENTE' && (
-                        <Typography variant="caption" sx={{ color: '#888888' }}>
-                          Revisado
-                        </Typography>
-                      )}
+                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                        <IconButton
+                          onClick={() => handleViewDocument(doc)}
+                          sx={{ color: '#1976d2' }}
+                          title="Ver Documento"
+                        >
+                          <Visibility />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleDownloadDocument(doc)}
+                          sx={{ color: '#757575' }}
+                          title="Descargar"
+                        >
+                          <Download />
+                        </IconButton>
+                        {doc.estatus === 'PENDIENTE' && (
+                          <>
+                            <IconButton
+                              onClick={() => openReviewDialog(doc, true)}
+                              sx={{ color: '#008000' }}
+                              title="Aprobar"
+                            >
+                              <CheckCircle />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => openReviewDialog(doc, false)}
+                              sx={{ color: '#CC0000' }}
+                              title="Rechazar"
+                            >
+                              <Cancel />
+                            </IconButton>
+                          </>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
@@ -288,7 +357,23 @@ export const AdminDocumentsPage: React.FC = () => {
         </TableContainer>
       </Container>
 
-      {/* Dialog de Revisión */}
+      {/* Diálogo de Confirmación antes de Revisar */}
+      <ConfirmationDialog
+        open={confirmDialog}
+        title={approving ? 'Aprobar Documento' : 'Rechazar Documento'}
+        message={
+          selectedDoc
+            ? `¿Estás seguro de que deseas ${approving ? 'APROBAR' : 'RECHAZAR'} el documento ${selectedDoc.tipo} del estudiante ${selectedDoc.documentosEstudiante[0]?.estudiante.usuario.nombre} ${selectedDoc.documentosEstudiante[0]?.estudiante.usuario.apellidoPaterno}?`
+            : ''
+        }
+        onConfirm={handleConfirmReview}
+        onClose={() => setConfirmDialog(false)}
+        confirmText="Continuar"
+        cancelText="Cancelar"
+        type={approving ? 'success' : 'error'}
+      />
+
+      {/* Dialog de Revisión (Motivo de rechazo) */}
       <Dialog open={reviewDialog} onClose={() => setReviewDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ backgroundColor: approving ? '#008000' : '#CC0000', color: '#FFFFFF' }}>
           {approving ? '✅ Aprobar Documento' : '❌ Rechazar Documento'}
@@ -335,6 +420,82 @@ export const AdminDocumentsPage: React.FC = () => {
             }}
           >
             {approving ? 'Aprobar' : 'Rechazar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Vista Previa */}
+      <Dialog 
+        open={previewDialog} 
+        onClose={() => {
+          if ((selectedDoc as any)?.previewUrl) {
+            window.URL.revokeObjectURL((selectedDoc as any).previewUrl);
+          }
+          setPreviewDialog(false);
+        }} 
+        maxWidth="lg" 
+        fullWidth
+      >
+        <DialogTitle sx={{ backgroundColor: '#1976d2', color: '#FFFFFF' }}>
+          👁️ Previsualización del Documento
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, minHeight: '500px' }}>
+          {selectedDoc && (
+            <>
+              <Typography variant="body2" gutterBottom>
+                <strong>Folio:</strong> {selectedDoc.folio}
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                <strong>Tipo:</strong> {selectedDoc.tipo.replace(/_/g, ' ')}
+              </Typography>
+              <Typography variant="body2" gutterBottom sx={{ mb: 2 }}>
+                <strong>Estudiante:</strong>{' '}
+                {selectedDoc.documentosEstudiante[0]?.estudiante.usuario.nombre}{' '}
+                {selectedDoc.documentosEstudiante[0]?.estudiante.usuario.apellidoPaterno}
+              </Typography>
+
+              {selectedDoc.mimeType === 'application/pdf' ? (
+                <Box sx={{ width: '100%', height: '500px', border: '1px solid #ddd', borderRadius: 1, overflow: 'hidden' }}>
+                  {(selectedDoc as any).previewUrl ? (
+                    <iframe
+                      src={(selectedDoc as any).previewUrl}
+                      title="Vista previa del documento"
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                    />
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                      <Typography>Cargando vista previa...</Typography>
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center' }}>
+                  {(selectedDoc as any).previewUrl ? (
+                    <img
+                      src={(selectedDoc as any).previewUrl}
+                      alt="Vista previa"
+                      style={{ maxWidth: '100%', maxHeight: '500px', borderRadius: '4px' }}
+                    />
+                  ) : (
+                    <Typography>Cargando vista previa...</Typography>
+                  )}
+                </Box>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={() => {
+              if ((selectedDoc as any)?.previewUrl) {
+                window.URL.revokeObjectURL((selectedDoc as any).previewUrl);
+              }
+              setPreviewDialog(false);
+              setSelectedDoc(null);
+            }}
+            sx={{ color: '#333333' }}
+          >
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>

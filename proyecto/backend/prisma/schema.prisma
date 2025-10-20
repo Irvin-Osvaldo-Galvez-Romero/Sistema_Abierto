@@ -8,9 +8,8 @@ generator client {
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // ==========================================
@@ -28,6 +27,7 @@ model Usuario {
   rol               Rol                 @default(ESTUDIANTE)
   activo            Boolean             @default(true)
   emailVerificado   Boolean             @default(false)
+  primerLogin       Boolean             @default(true)
   intentosFallidos  Int                 @default(0)
   bloqueadoHasta    DateTime?
   ultimoAcceso      DateTime?
@@ -235,7 +235,7 @@ enum EstatusInscripcion {
 
 model Calificacion {
   id              String    @id @default(uuid())
-  calificacion    Decimal   @db.Decimal(4, 2)
+  calificacion    Float
   estatus         String
   observaciones   String?
   

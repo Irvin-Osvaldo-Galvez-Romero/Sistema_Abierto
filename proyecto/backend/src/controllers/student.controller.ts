@@ -136,8 +136,44 @@ export class StudentController {
   }
 
   /**
+   * PATCH /api/students/:id/baja
+   * Dar de baja estudiante (soft delete)
+   */
+  static async darDeBaja(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      await StudentService.darDeBaja(id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Estudiante dado de baja exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * DELETE /api/students/:id/permanent
+   * Eliminar estudiante permanentemente (hard delete)
+   */
+  static async deletePermanently(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      await StudentService.deletePermanently(id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Estudiante eliminado permanentemente de la base de datos',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * DELETE /api/students/:id
-   * Eliminar estudiante (soft delete)
+   * Eliminar estudiante (soft delete) - mantener compatibilidad
    */
   static async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

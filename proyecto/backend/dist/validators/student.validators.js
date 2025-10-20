@@ -82,10 +82,10 @@ exports.createStudentSchema = {
         }),
         carreraId: joi_1.default.string()
             .uuid()
-            .optional()
-            .allow(null)
+            .required()
             .messages({
             'string.uuid': 'El ID de carrera debe ser un UUID válido',
+            'any.required': 'La carrera es requerida',
         }),
         estatus: joi_1.default.string()
             .valid(...Object.values(client_1.EstatusEstudiante))

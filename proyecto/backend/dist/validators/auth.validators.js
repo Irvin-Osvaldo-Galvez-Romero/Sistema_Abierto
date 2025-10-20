@@ -45,18 +45,18 @@ exports.registerSchema = {
         apellidoMaterno: joi_1.default.string()
             .min(2)
             .max(100)
-            .optional()
-            .allow('')
+            .required()
             .messages({
             'string.min': 'El apellido materno debe tener al menos 2 caracteres',
             'string.max': 'El apellido materno no puede exceder 100 caracteres',
+            'any.required': 'El apellido materno es requerido',
         }),
         telefono: joi_1.default.string()
             .pattern(/^[0-9]{10}$/)
-            .optional()
-            .allow('')
+            .required()
             .messages({
             'string.pattern.base': 'El teléfono debe ser un número de 10 dígitos',
+            'any.required': 'El teléfono es requerido',
         }),
         rol: joi_1.default.string()
             .valid(...Object.values(client_1.Rol))

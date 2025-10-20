@@ -11,6 +11,7 @@ const jwt_1 = require("../utils/jwt");
 const errors_1 = require("../utils/errors");
 const env_1 = require("../config/env");
 const logger_1 = __importDefault(require("../utils/logger"));
+const email_service_1 = require("./email.service");
 class AuthService {
     static async register(data) {
         try {
@@ -52,6 +53,36 @@ class AuthService {
             });
             await this.logActivity(usuario.id, 'REGISTRO', 'Usuario registrado exitosamente');
             logger_1.default.info(`Usuario registrado: ${usuario.email}`);
+            if (data.sendEmail !== false) {
+                try {
+                    if (usuario.rol === client_1.Rol.ESTUDIANTE) {
+                        await email_service_1.EmailService.sendStudentCredentials({
+                            nombre: usuario.nombre,
+                            apellidoPaterno: usuario.apellidoPaterno,
+                            apellidoMaterno: usuario.apellidoMaterno || '',
+                            email: usuario.email,
+                            password: data.password,
+                            matricula: data.matricula,
+                            tipo: 'ESTUDIANTE',
+                        });
+                        logger_1.default.info(`📧 Correo de credenciales enviado a estudiante: ${usuario.email}`);
+                    }
+                    else if (usuario.rol === client_1.Rol.PROFESOR) {
+                        await email_service_1.EmailService.sendProfessorCredentials({
+                            nombre: usuario.nombre,
+                            apellidoPaterno: usuario.apellidoPaterno,
+                            apellidoMaterno: usuario.apellidoMaterno || '',
+                            email: usuario.email,
+                            password: data.password,
+                            tipo: 'PROFESOR',
+                        });
+                        logger_1.default.info(`📧 Correo de credenciales enviado a profesor: ${usuario.email}`);
+                    }
+                }
+                catch (emailError) {
+                    logger_1.default.warn(`⚠️ Error al enviar correo de credenciales a ${usuario.email}:`, emailError);
+                }
+            }
             return {
                 user: {
                     id: usuario.id,
@@ -137,6 +168,7 @@ class AuthService {
                     email: usuario.email,
                     nombre: `${usuario.nombre} ${usuario.apellidoPaterno}`,
                     rol: usuario.rol,
+                    primerLogin: usuario.primerLogin,
                 },
                 tokens: {
                     accessToken,

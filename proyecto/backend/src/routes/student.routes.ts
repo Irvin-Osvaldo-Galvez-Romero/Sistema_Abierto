@@ -117,6 +117,30 @@ router.put(
 );
 
 /**
+ * @route   DELETE /api/students/:id/permanent
+ * @desc    Eliminar estudiante permanentemente (hard delete - borra de BD)
+ * @access  Private (Admin)
+ */
+router.delete(
+  '/:id/permanent',
+  authorize(Rol.SUPER_ADMIN, Rol.ADMINISTRADOR),
+  validate(getStudentByIdSchema),
+  StudentController.deletePermanently
+);
+
+/**
+ * @route   PATCH /api/students/:id/baja
+ * @desc    Dar de baja estudiante (soft delete - marca como inactivo)
+ * @access  Private (Admin)
+ */
+router.patch(
+  '/:id/baja',
+  authorize(Rol.SUPER_ADMIN, Rol.ADMINISTRADOR),
+  validate(getStudentByIdSchema),
+  StudentController.darDeBaja
+);
+
+/**
  * @route   DELETE /api/students/:id
  * @desc    Eliminar estudiante (soft delete)
  * @access  Private (Admin)

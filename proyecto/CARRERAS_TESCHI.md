@@ -201,3 +201,4 @@ Si el TESCHI llegara a agregar o modificar carreras en el futuro, puedes:
 
 **¡Sistema actualizado con las carreras oficiales del TESCHI! 🏫✨**
 
+

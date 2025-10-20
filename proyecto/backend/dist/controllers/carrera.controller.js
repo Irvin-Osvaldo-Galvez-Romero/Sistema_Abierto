@@ -1,22 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CarreraController = void 0;
-const carrera_service_1 = require("../services/carrera.service");
+const database_1 = require("../config/database");
 class CarreraController {
-    static async create(req, res, next) {
-        try {
-            const carrera = await carrera_service_1.CarreraService.create(req.body);
-            res.status(201).json({ success: true, data: carrera });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
     static async getAll(req, res, next) {
         try {
-            const includeInactive = req.query.includeInactive === 'true';
-            const carreras = await carrera_service_1.CarreraService.findAll(includeInactive);
-            res.status(200).json({ success: true, data: carreras });
+            const carreras = await database_1.prisma.carrera.findMany({
+                where: {
+                    activo: true,
+                },
+                select: {
+                    id: true,
+                    clave: true,
+                    nombre: true,
+                    descripcion: true,
+                    duracionSemestres: true,
+                    creditos: true,
+                    modalidad: true,
+                },
+                orderBy: {
+                    nombre: 'asc',
+                },
+            });
+            res.status(200).json({
+                success: true,
+                data: carreras,
+                total: carreras.length,
+            });
         }
         catch (error) {
             next(error);
@@ -24,26 +34,30 @@ class CarreraController {
     }
     static async getById(req, res, next) {
         try {
-            const carrera = await carrera_service_1.CarreraService.findById(req.params.id);
-            res.status(200).json({ success: true, data: carrera });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-    static async update(req, res, next) {
-        try {
-            const carrera = await carrera_service_1.CarreraService.update(req.params.id, req.body);
-            res.status(200).json({ success: true, data: carrera });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-    static async delete(req, res, next) {
-        try {
-            await carrera_service_1.CarreraService.delete(req.params.id);
-            res.status(200).json({ success: true, message: 'Carrera eliminada' });
+            const { id } = req.params;
+            const carrera = await database_1.prisma.carrera.findUnique({
+                where: { id },
+                select: {
+                    id: true,
+                    clave: true,
+                    nombre: true,
+                    descripcion: true,
+                    duracionSemestres: true,
+                    creditos: true,
+                    modalidad: true,
+                },
+            });
+            if (!carrera) {
+                res.status(404).json({
+                    success: false,
+                    message: 'Carrera no encontrada',
+                });
+                return;
+            }
+            res.status(200).json({
+                success: true,
+                data: carrera,
+            });
         }
         catch (error) {
             next(error);

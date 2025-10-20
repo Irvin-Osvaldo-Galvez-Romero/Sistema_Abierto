@@ -189,8 +189,179 @@ La contraseña `Teschi123` cumple con los requisitos de seguridad:
 ### **Recomendaciones**
 
 1. **Primer Login:** Se recomienda que los usuarios cambien su contraseña en el primer inicio de sesión
-2. **Comunicación:** Informar claramente a los nuevos usuarios sus credenciales
-3. **Documentación:** Entregar credenciales por escrito o email seguro
+2. **Comunicación:** Las credenciales se envían automáticamente por correo institucional
+3. **Seguridad:** Los correos son confidenciales y solo se envían al destinatario
+
+---
+
+## 📧 **SISTEMA DE ENVÍO DE CREDENCIALES POR CORREO**
+
+### **Funcionamiento Automático**
+
+El sistema envía **automáticamente** las credenciales de acceso al correo institucional del usuario cuando el administrador crea una cuenta.
+
+### **Proceso Completo:**
+
+```
+1. Administrador llena formulario
+        ↓
+2. Sistema crea cuenta de usuario
+        ↓
+3. Sistema envía correo automático
+        ↓
+4. Usuario recibe credenciales en su correo institucional
+        ↓
+5. Usuario accede al sistema por primera vez
+```
+
+### **Contenido del Correo**
+
+Los correos incluyen:
+- ✅ Nombre completo del usuario
+- ✅ Correo institucional (`usuario@teschi.edu.mx`)
+- ✅ Contraseña temporal (`Teschi123`)
+- ✅ Matrícula (solo estudiantes)
+- ✅ Enlace directo al sistema
+- ✅ Instrucciones paso a paso
+- ✅ Recomendaciones de seguridad
+
+### **Correo para Estudiantes - Vista Previa**
+
+```html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         🎓 Bienvenido al TESCHI
+  Tecnológico de Estudios Superiores de Chimalhuacán
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Estimado(a) Juan Pérez López,
+
+Tu cuenta de estudiante ha sido creada exitosamente 
+en el Sistema de Gestión Documental del TESCHI.
+
+┌─────────────────────────────────────────────┐
+│  📋 Tus Credenciales de Acceso              │
+├─────────────────────────────────────────────┤
+│  MATRÍCULA                                   │
+│  2024001                                     │
+│                                              │
+│  CORREO INSTITUCIONAL                        │
+│  juan.perez@teschi.edu.mx                   │
+│                                              │
+│  CONTRASEÑA TEMPORAL                         │
+│  Teschi123                                   │
+└─────────────────────────────────────────────┘
+
+⚠️ Importante - Seguridad de tu Cuenta
+• Cambia tu contraseña en el primer inicio de sesión
+• No compartas tus credenciales con nadie
+• Guarda esta información en un lugar seguro
+• Este correo es confidencial y de uso exclusivo
+
+📝 Instrucciones para Acceder
+1. Ingresa al sistema haciendo clic en el botón
+2. Usa tu correo institucional y contraseña temporal
+3. El sistema te pedirá cambiar tu contraseña
+4. Podrás subir tus documentos de reinscripción
+
+          [ 🔐 Acceder al Sistema ]
+
+¿Necesitas ayuda?
+Contacta al personal administrativo del TESCHI.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sistema de Gestión Documental Digital - TESCHI
+Este correo fue enviado automáticamente
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### **Correo para Profesores - Vista Previa**
+
+```html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         👨‍🏫 Bienvenido al TESCHI
+  Tecnológico de Estudios Superiores de Chimalhuacán
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Estimado(a) Prof. María García Hernández,
+
+Tu cuenta de profesor ha sido creada exitosamente 
+en el Sistema de Gestión Documental del TESCHI.
+
+┌─────────────────────────────────────────────┐
+│  📋 Tus Credenciales de Acceso              │
+├─────────────────────────────────────────────┤
+│  CORREO INSTITUCIONAL                        │
+│  maria.garcia@teschi.edu.mx                 │
+│                                              │
+│  CONTRASEÑA TEMPORAL                         │
+│  Teschi123                                   │
+└─────────────────────────────────────────────┘
+
+⚠️ Importante - Seguridad de tu Cuenta
+• Cambia tu contraseña en el primer inicio de sesión
+• No compartas tus credenciales con nadie
+• Guarda esta información en un lugar seguro
+• Este correo es confidencial y de uso exclusivo
+
+📝 Instrucciones para Acceder
+1. Ingresa al sistema haciendo clic en el botón
+2. Usa tu correo institucional y contraseña temporal
+3. El sistema te pedirá cambiar tu contraseña
+4. Podrás revisar documentos y gestionar actividades
+
+          [ 🔐 Acceder al Sistema ]
+
+¿Necesitas ayuda?
+Contacta al departamento de TI del TESCHI.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sistema de Gestión Documental Digital - TESCHI
+Este correo fue enviado automáticamente
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### **Configuración de Correo Requerida**
+
+Para que el sistema envíe correos, se debe configurar en el archivo `.env` del backend:
+
+```bash
+# Servidor SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+
+# Credenciales institucionales
+SMTP_USER=sistema@teschi.edu.mx
+SMTP_PASSWORD=contraseña_de_aplicacion
+
+# URL del frontend
+FRONTEND_URL=http://localhost:3000
+```
+
+### **Seguridad del Envío**
+
+- 🔒 **Cifrado TLS:** Todos los correos se envían con cifrado TLS
+- 📧 **Correo Oficial:** Se usa una cuenta institucional del TESCHI
+- 🚫 **No Spam:** Los correos NO van a carpeta de spam (dominio verificado)
+- ✅ **Confirmación:** El sistema registra cuando se envía un correo
+- ⚠️ **Fallback:** Si falla el envío, la cuenta se crea igual (admin puede reenviar)
+
+### **Ventajas del Sistema Automático**
+
+| Ventaja | Descripción |
+|---------|-------------|
+| 🚀 **Rapidez** | El usuario recibe sus credenciales al instante |
+| 📱 **Accesibilidad** | El usuario puede acceder desde cualquier lugar |
+| 🔐 **Seguridad** | No se transmiten credenciales por medios inseguros |
+| 📋 **Trazabilidad** | Se registra el envío en los logs del sistema |
+| ✅ **Profesionalismo** | Correos con diseño institucional del TESCHI |
+| 📧 **Evidencia** | El usuario tiene evidencia escrita de sus credenciales |
+
+### **¿Qué pasa si el usuario no recibe el correo?**
+
+1. **Verificar carpeta de spam** (poco probable con dominio verificado)
+2. **Verificar que el correo fue escrito correctamente**
+3. **El administrador puede crear el usuario nuevamente** (el sistema detectará el duplicado)
+4. **Contactar a TI** para revisar los logs del servidor SMTP
 
 ---
 
@@ -321,4 +492,5 @@ Password: Teschi123
 ---
 
 **¡Sistema completamente personalizado para el TESCHI! 🏫🔐✨**
+
 

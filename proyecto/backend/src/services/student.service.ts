@@ -347,9 +347,9 @@ export class StudentService {
   }
 
   /**
-   * Eliminar estudiante (soft delete)
+   * Dar de baja estudiante (soft delete)
    */
-  static async delete(id: string): Promise<void> {
+  static async darDeBaja(id: string): Promise<void> {
     try {
       const estudiante = await prisma.estudiante.findUnique({
         where: { id },
@@ -369,9 +369,75 @@ export class StudentService {
 
       logger.info(`Estudiante dado de baja: ${estudiante.matricula}`);
     } catch (error) {
-      logger.error('Error al eliminar estudiante:', error);
+      logger.error('Error al dar de baja estudiante:', error);
       throw error;
     }
+  }
+
+  /**
+   * Eliminar estudiante permanentemente (hard delete)
+   */
+  static async deletePermanently(id: string): Promise<void> {
+    try {
+      const estudiante = await prisma.estudiante.findUnique({
+        where: { id },
+        include: {
+          usuario: true,
+        },
+      });
+
+      if (!estudiante) {
+        throw new NotFoundError('Estudiante no encontrado');
+      }
+
+      const usuarioId = estudiante.usuarioId;
+
+      // 1. Eliminar relaciones estudiante-documento
+      await prisma.documentoEstudiante.deleteMany({
+        where: { estudianteId: id },
+      });
+
+      // 2. Eliminar documentos del estudiante
+      await prisma.documento.deleteMany({
+        where: {
+          documentosEstudiante: {
+            some: { estudianteId: id },
+          },
+        },
+      });
+
+      // 3. Eliminar perfil de estudiante
+      await prisma.estudiante.delete({
+        where: { id },
+      });
+
+      // 4. Eliminar tokens del usuario
+      await prisma.tokenSesion.deleteMany({
+        where: { usuarioId },
+      });
+
+      // 5. Eliminar actividades del usuario
+      await prisma.actividadUsuario.deleteMany({
+        where: { usuarioId },
+      });
+
+      // 6. Eliminar usuario
+      await prisma.usuario.delete({
+        where: { id: usuarioId },
+      });
+
+      logger.info(`Estudiante eliminado permanentemente: ${estudiante.matricula}`);
+    } catch (error) {
+      logger.error('Error al eliminar estudiante permanentemente:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Eliminar estudiante (soft delete) - mantener compatibilidad
+   */
+  static async delete(id: string): Promise<void> {
+    return this.darDeBaja(id);
   }
 
   /**

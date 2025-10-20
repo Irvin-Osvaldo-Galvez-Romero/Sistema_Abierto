@@ -15,6 +15,7 @@ import {
 } from '../utils/errors';
 import { config } from '../config/env';
 import logger from '../utils/logger';
+import { EmailService } from './email.service';
 
 interface RegisterData {
   email: string;
@@ -24,6 +25,8 @@ interface RegisterData {
   apellidoMaterno?: string;
   telefono?: string;
   rol?: Rol;
+  matricula?: string; // Para estudiantes
+  sendEmail?: boolean; // Opción para enviar correo
 }
 
 interface LoginData {
@@ -37,6 +40,7 @@ interface AuthResponse {
     email: string;
     nombre: string;
     rol: Rol;
+    primerLogin?: boolean;
   };
   tokens: {
     accessToken: string;
@@ -102,6 +106,37 @@ export class AuthService {
       await this.logActivity(usuario.id, 'REGISTRO', 'Usuario registrado exitosamente');
 
       logger.info(`Usuario registrado: ${usuario.email}`);
+
+      // Enviar correo con credenciales si se solicita
+      if (data.sendEmail !== false) {
+        try {
+          if (usuario.rol === Rol.ESTUDIANTE) {
+            await EmailService.sendStudentCredentials({
+              nombre: usuario.nombre,
+              apellidoPaterno: usuario.apellidoPaterno,
+              apellidoMaterno: usuario.apellidoMaterno || '',
+              email: usuario.email,
+              password: data.password, // Contraseña sin hashear
+              matricula: data.matricula,
+              tipo: 'ESTUDIANTE',
+            });
+            logger.info(`📧 Correo de credenciales enviado a estudiante: ${usuario.email}`);
+          } else if (usuario.rol === Rol.PROFESOR) {
+            await EmailService.sendProfessorCredentials({
+              nombre: usuario.nombre,
+              apellidoPaterno: usuario.apellidoPaterno,
+              apellidoMaterno: usuario.apellidoMaterno || '',
+              email: usuario.email,
+              password: data.password, // Contraseña sin hashear
+              tipo: 'PROFESOR',
+            });
+            logger.info(`📧 Correo de credenciales enviado a profesor: ${usuario.email}`);
+          }
+        } catch (emailError) {
+          // No fallar el registro si falla el correo, solo registrar el error
+          logger.warn(`⚠️ Error al enviar correo de credenciales a ${usuario.email}:`, emailError);
+        }
+      }
 
       return {
         user: {
@@ -228,6 +263,7 @@ export class AuthService {
           email: usuario.email,
           nombre: `${usuario.nombre} ${usuario.apellidoPaterno}`,
           rol: usuario.rol,
+          primerLogin: usuario.primerLogin,
         },
         tokens: {
           accessToken,

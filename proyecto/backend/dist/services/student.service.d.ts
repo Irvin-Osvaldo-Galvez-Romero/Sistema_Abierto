@@ -40,6 +40,8 @@ export declare class StudentService {
     static findByMatricula(matricula: string): Promise<Estudiante>;
     static findByUserId(usuarioId: string): Promise<Estudiante>;
     static update(id: string, data: UpdateStudentData): Promise<Estudiante>;
+    static darDeBaja(id: string): Promise<void>;
+    static deletePermanently(id: string): Promise<void>;
     static delete(id: string): Promise<void>;
     static generateMatricula(): Promise<string>;
     static search(query: string): Promise<Estudiante[]>;

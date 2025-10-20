@@ -97,6 +97,32 @@ class StudentController {
             next(error);
         }
     }
+    static async darDeBaja(req, res, next) {
+        try {
+            const { id } = req.params;
+            await student_service_1.StudentService.darDeBaja(id);
+            res.status(200).json({
+                success: true,
+                message: 'Estudiante dado de baja exitosamente',
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async deletePermanently(req, res, next) {
+        try {
+            const { id } = req.params;
+            await student_service_1.StudentService.deletePermanently(id);
+            res.status(200).json({
+                success: true,
+                message: 'Estudiante eliminado permanentemente de la base de datos',
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async delete(req, res, next) {
         try {
             const { id } = req.params;

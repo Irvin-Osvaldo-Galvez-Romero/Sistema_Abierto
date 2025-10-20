@@ -425,3 +425,5 @@ const handleViewDocument = async (doc: any) => {
 
 **Pruébalo ahora:** Ve a Estudiantes → Ver Detalles → 👁️ Vista Previa
 
+
+

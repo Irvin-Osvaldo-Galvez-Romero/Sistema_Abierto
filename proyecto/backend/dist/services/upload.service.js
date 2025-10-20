@@ -91,13 +91,14 @@ class UploadService {
             const filename = `${data.tipo}_${Date.now()}${path_1.default.extname(data.file.originalname)}`;
             const filepath = path_1.default.join(uploadDir, filename);
             await promises_1.default.writeFile(filepath, data.file.buffer);
+            const rutaRelativa = path_1.default.join('uploads', data.estudianteId, filename);
             const folio = `DOC-${new Date().getFullYear()}-${(0, uuid_1.v4)().slice(0, 8).toUpperCase()}`;
             const documento = await database_1.prisma.documento.create({
                 data: {
                     folio,
                     tipo: data.tipo,
                     titulo: this.getTituloByTipo(data.tipo),
-                    rutaArchivo: filepath,
+                    rutaArchivo: rutaRelativa,
                     hashArchivo,
                     tamanoBytes: data.file.size,
                     mimeType: data.file.mimetype,

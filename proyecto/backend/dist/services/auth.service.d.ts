@@ -7,6 +7,8 @@ interface RegisterData {
     apellidoMaterno?: string;
     telefono?: string;
     rol?: Rol;
+    matricula?: string;
+    sendEmail?: boolean;
 }
 interface LoginData {
     email: string;
@@ -18,6 +20,7 @@ interface AuthResponse {
         email: string;
         nombre: string;
         rol: Rol;
+        primerLogin?: boolean;
     };
     tokens: {
         accessToken: string;

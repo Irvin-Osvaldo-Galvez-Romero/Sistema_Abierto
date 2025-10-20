@@ -41,6 +41,12 @@ export const LoginPage: React.FC = () => {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated && user) {
+      // Si es primer login, redirigir a cambio de contraseña
+      if (user.primerLogin) {
+        navigate('/change-password');
+        return;
+      }
+      
       // Redirigir según el rol del usuario
       if (user.rol === 'ADMINISTRADOR') {
         navigate('/admin/dashboard');

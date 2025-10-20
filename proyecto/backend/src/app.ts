@@ -90,9 +90,13 @@ import calificacionRoutes from './routes/calificacion.routes';
 import uploadRoutes from './routes/upload.routes';
 import notificacionRoutes from './routes/notificacion.routes';
 import profesorRoutes from './routes/profesor.routes';
+import passwordRoutes from './routes/password.routes';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
+
+// Rutas de cambio de contraseña
+app.use('/api/password', passwordRoutes);
 
 // Rutas de estudiantes
 app.use('/api/students', studentRoutes);
