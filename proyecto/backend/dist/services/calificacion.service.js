@@ -7,7 +7,6 @@ exports.CalificacionService = void 0;
 const database_1 = require("../config/database");
 const errors_1 = require("../utils/errors");
 const logger_1 = __importDefault(require("../utils/logger"));
-const library_1 = require("@prisma/client/runtime/library");
 class CalificacionService {
     static async create(data) {
         try {
@@ -28,7 +27,7 @@ class CalificacionService {
             }
             const calificacion = await database_1.prisma.calificacion.create({
                 data: {
-                    calificacion: new library_1.Decimal(data.calificacion),
+                    calificacion: data.calificacion,
                     estatus: data.estatus,
                     observaciones: data.observaciones,
                     estudianteId: data.estudianteId,
@@ -105,7 +104,7 @@ class CalificacionService {
             const updated = await database_1.prisma.calificacion.update({
                 where: { id },
                 data: {
-                    calificacion: new library_1.Decimal(calificacion),
+                    calificacion: calificacion,
                     observaciones,
                 },
                 include: {

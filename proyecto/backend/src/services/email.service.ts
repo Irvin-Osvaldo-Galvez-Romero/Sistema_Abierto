@@ -22,6 +22,15 @@ interface CredentialsData {
   tipo: 'ESTUDIANTE' | 'PROFESOR';
 }
 
+interface PasswordResetData {
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  email: string;
+  resetToken: string;
+  rol: string;
+}
+
 export class EmailService {
   private static transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -508,6 +517,210 @@ export class EmailService {
     await this.sendEmail({
       to: data.email,
       subject: '👨‍🏫 Credenciales de Acceso - Sistema TESCHI',
+      html,
+    });
+  }
+
+  /**
+   * Enviar correo de restablecimiento de contraseña
+   */
+  static async sendPasswordReset(data: PasswordResetData): Promise<void> {
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${data.resetToken}`;
+    
+    const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restablecer Contraseña - TESCHI</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 5px 0 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 30px 20px;
+    }
+    .greeting {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .info-box {
+      background-color: #fff3e0;
+      border-left: 4px solid #ff9800;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .info-box h3 {
+      margin: 0 0 10px 0;
+      color: #e65100;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .info-box p {
+      margin: 0;
+      color: #e65100;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .warning-box {
+      background-color: #ffebee;
+      border-left: 4px solid #f44336;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .warning-box h3 {
+      margin: 0 0 10px 0;
+      color: #c62828;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .warning-box ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #c62828;
+      font-size: 13px;
+    }
+    .warning-box li {
+      margin: 5px 0;
+    }
+    .button {
+      display: inline-block;
+      background-color: #d32f2f;
+      color: white;
+      text-decoration: none;
+      padding: 15px 40px;
+      border-radius: 5px;
+      font-weight: 600;
+      margin: 20px 0;
+      text-align: center;
+      font-size: 16px;
+    }
+    .button:hover {
+      background-color: #b71c1c;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .footer p {
+      margin: 5px 0;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e0e0e0;
+      margin: 20px 0;
+    }
+    .token-info {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #666;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Restablecer Contraseña</h1>
+      <p>Tecnológico de Estudios Superiores de Chimalhuacán</p>
+    </div>
+    
+    <div class="content">
+      <div class="greeting">
+        <p>Estimado(a) <strong>${data.nombre} ${data.apellidoPaterno} ${data.apellidoMaterno}</strong>,</p>
+        <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el Sistema de Gestión Documental del TESCHI.</p>
+      </div>
+
+      <div class="info-box">
+        <h3>📧 Solicitud de Restablecimiento</h3>
+        <p>Si solicitaste restablecer tu contraseña, haz clic en el botón de abajo para crear una nueva contraseña segura.</p>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="${resetUrl}" class="button">
+          🔑 Restablecer Contraseña
+        </a>
+      </div>
+
+      <div class="warning-box">
+        <h3>⚠️ Importante - Seguridad</h3>
+        <ul>
+          <li><strong>Este enlace expira en 15 minutos</strong> por seguridad</li>
+          <li><strong>Si no solicitaste este cambio</strong>, ignora este correo</li>
+          <li><strong>Tu contraseña actual sigue siendo válida</strong> hasta que la cambies</li>
+          <li><strong>No compartas este enlace</strong> con nadie</li>
+        </ul>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size: 13px; color: #666; line-height: 1.6;">
+        <p><strong>¿No puedes hacer clic en el botón?</strong></p>
+        <p>Copia y pega la siguiente URL en tu navegador:</p>
+        <div class="token-info">${resetUrl}</div>
+      </div>
+
+      <div style="font-size: 13px; color: #666; line-height: 1.6; margin-top: 20px;">
+        <p><strong>¿Necesitas ayuda?</strong></p>
+        <p>Si tienes problemas para restablecer tu contraseña o alguna duda, contacta al personal administrativo del TESCHI.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>Tecnológico de Estudios Superiores de Chimalhuacán</strong></p>
+      <p>Sistema de Gestión Documental Digital</p>
+      <p style="margin-top: 10px; font-size: 11px; color: #999;">
+        Este correo fue enviado automáticamente. Por favor no respondas a este mensaje.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await this.sendEmail({
+      to: data.email,
+      subject: '🔐 Restablecer Contraseña - Sistema TESCHI',
       html,
     });
   }

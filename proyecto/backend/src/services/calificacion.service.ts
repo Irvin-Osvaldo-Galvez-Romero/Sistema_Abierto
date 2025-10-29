@@ -45,7 +45,7 @@ export class CalificacionService {
 
       const calificacion = await prisma.calificacion.create({
         data: {
-          calificacion: new Decimal(data.calificacion),
+          calificacion: data.calificacion,
           estatus: data.estatus,
           observaciones: data.observaciones,
           estudianteId: data.estudianteId,
@@ -125,7 +125,7 @@ export class CalificacionService {
       const updated = await prisma.calificacion.update({
         where: { id },
         data: {
-          calificacion: new Decimal(calificacion),
+          calificacion: calificacion,
           observaciones,
         },
         include: {

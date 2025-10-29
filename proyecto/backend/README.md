@@ -108,8 +108,9 @@ backend/
 ## 🔌 API Endpoints
 
 ### Autenticación
-- `POST /api/auth/register` - Registrar usuario
 - `POST /api/auth/login` - Iniciar sesión
+- `POST /api/auth/forgot-password` - Solicitar restablecimiento de contraseña
+- `POST /api/auth/reset-password` - Restablecer contraseña con token
 - `POST /api/auth/refresh` - Renovar token
 - `POST /api/auth/logout` - Cerrar sesión
 - `GET /api/auth/profile` - Obtener perfil (protegido)

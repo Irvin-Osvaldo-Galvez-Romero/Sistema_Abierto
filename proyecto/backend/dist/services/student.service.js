@@ -363,10 +363,10 @@ class StudentService {
             const estudiantes = await database_1.prisma.estudiante.findMany({
                 where: {
                     OR: [
-                        { matricula: { contains: query, mode: 'insensitive' } },
-                        { usuario: { nombre: { contains: query, mode: 'insensitive' } } },
-                        { usuario: { apellidoPaterno: { contains: query, mode: 'insensitive' } } },
-                        { usuario: { email: { contains: query, mode: 'insensitive' } } },
+                        { matricula: { contains: query } },
+                        { usuario: { nombre: { contains: query } } },
+                        { usuario: { apellidoPaterno: { contains: query } } },
+                        { usuario: { email: { contains: query } } },
                     ],
                 },
                 include: {

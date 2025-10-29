@@ -4,16 +4,9 @@
  */
 
 import api from './api.service';
-import { LoginRequest, RegisterRequest, AuthResponse, UserProfile } from '../types/auth.types';
+import { LoginRequest, AuthResponse, UserProfile } from '../types/auth.types';
 
 export class AuthService {
-  /**
-   * Registrar nuevo usuario
-   */
-  static async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await api.post<{ success: boolean; data: AuthResponse }>('/auth/register', data);
-    return response.data.data;
-  }
 
   /**
    * Iniciar sesión
@@ -21,6 +14,20 @@ export class AuthService {
   static async login(data: LoginRequest): Promise<AuthResponse> {
     const response = await api.post<{ success: boolean; data: AuthResponse }>('/auth/login', data);
     return response.data.data;
+  }
+
+  /**
+   * Solicitar restablecimiento de contraseña
+   */
+  static async forgotPassword(email: string): Promise<void> {
+    await api.post('/auth/forgot-password', { email });
+  }
+
+  /**
+   * Restablecer contraseña con token
+   */
+  static async resetPassword(token: string, password: string): Promise<void> {
+    await api.post('/auth/reset-password', { token, password });
   }
 
   /**

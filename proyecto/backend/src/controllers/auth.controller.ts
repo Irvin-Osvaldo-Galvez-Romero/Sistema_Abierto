@@ -8,23 +8,6 @@ import { AuthService } from '../services/auth.service';
 import logger from '../utils/logger';
 
 export class AuthController {
-  /**
-   * POST /api/auth/register
-   * Registrar nuevo usuario
-   */
-  static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const result = await AuthService.register(req.body);
-
-      res.status(201).json({
-        success: true,
-        message: 'Usuario registrado exitosamente',
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
 
   /**
    * POST /api/auth/login
@@ -96,6 +79,44 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: 'Sesión cerrada exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/forgot-password
+   * Solicitar restablecimiento de contraseña
+   */
+  static async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+
+      await AuthService.forgotPassword(email);
+
+      res.status(200).json({
+        success: true,
+        message: 'Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/reset-password
+   * Restablecer contraseña con token
+   */
+  static async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { token, password } = req.body;
+
+      await AuthService.resetPassword(token, password);
+
+      res.status(200).json({
+        success: true,
+        message: 'Contraseña restablecida exitosamente',
       });
     } catch (error) {
       next(error);

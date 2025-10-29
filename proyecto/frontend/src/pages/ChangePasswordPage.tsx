@@ -134,7 +134,7 @@ export const ChangePasswordPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg,rgb(6, 99, 63) 0%,rgb(83, 205, 91) 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -161,7 +161,7 @@ export const ChangePasswordPage: React.FC = () => {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg,rgb(6, 99, 63) 0%,rgb(83, 205, 91) 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -318,9 +318,9 @@ export const ChangePasswordPage: React.FC = () => {
               sx={{
                 mb: 2,
                 py: 1.5,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg,rgb(6, 99, 63) 0%,rgb(83, 205, 91) 100%)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                  background: 'linear-gradient(135deg,rgb(128, 125, 125) 0%,rgb(141, 141, 141) 100%)',
                 },
               }}
             >

@@ -8,20 +8,15 @@ import { AuthController } from '../controllers/auth.controller';
 import { validate } from '../middleware/validation.middleware';
 import { authenticate } from '../middleware/auth.middleware';
 import {
-  registerSchema,
   loginSchema,
   refreshTokenSchema,
   logoutSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from '../validators/auth.validators';
 
 const router = Router();
 
-/**
- * @route   POST /api/auth/register
- * @desc    Registrar nuevo usuario
- * @access  Public
- */
-router.post('/register', validate(registerSchema), AuthController.register);
 
 /**
  * @route   POST /api/auth/login
@@ -36,6 +31,20 @@ router.post('/login', validate(loginSchema), AuthController.login);
  * @access  Public
  */
 router.post('/refresh', validate(refreshTokenSchema), AuthController.refreshToken);
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Solicitar restablecimiento de contraseña
+ * @access  Public
+ */
+router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.forgotPassword);
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Restablecer contraseña con token
+ * @access  Public
+ */
+router.post('/reset-password', validate(resetPasswordSchema), AuthController.resetPassword);
 
 /**
  * @route   POST /api/auth/logout

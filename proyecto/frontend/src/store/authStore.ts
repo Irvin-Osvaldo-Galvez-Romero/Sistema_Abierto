@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { User, AuthResponse, LoginRequest, RegisterRequest } from '../types/auth.types';
+import { User, AuthResponse, LoginRequest } from '../types/auth.types';
 import AuthService from '../services/auth.service';
 import toast from 'react-hot-toast';
 
@@ -16,7 +16,6 @@ interface AuthState {
   
   // Acciones
   login: (credentials: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   clearError: () => void;
@@ -62,37 +61,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  /**
-   * Registrar usuario
-   */
-  register: async (data: RegisterRequest) => {
-    set({ isLoading: true, error: null });
-    
-    try {
-      const response: AuthResponse = await AuthService.register(data);
-      
-      // Guardar tokens
-      AuthService.saveTokens(response.tokens.accessToken, response.tokens.refreshToken);
-      
-      // Actualizar estado
-      set({
-        user: response.user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-      
-      toast.success('¡Cuenta creada exitosamente!');
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || 'Error al registrar usuario';
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
-      toast.error(errorMessage);
-      throw error;
-    }
-  },
 
   /**
    * Cerrar sesión

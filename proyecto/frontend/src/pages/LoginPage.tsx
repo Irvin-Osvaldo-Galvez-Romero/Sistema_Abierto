@@ -48,7 +48,7 @@ export const LoginPage: React.FC = () => {
       }
       
       // Redirigir según el rol del usuario
-      if (user.rol === 'ADMINISTRADOR') {
+      if (user.rol === 'ADMINISTRADOR' || user.rol === 'SUPER_ADMIN') {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
@@ -177,8 +177,9 @@ export const LoginPage: React.FC = () => {
 
             <Box sx={{ textAlign: 'right', mb: 2 }}>
               <Link
-                href="/forgot-password"
+                component="button"
                 variant="body2"
+                onClick={() => navigate('/forgot-password')}
                 sx={{ textDecoration: 'none' }}
               >
                 ¿Olvidaste tu contraseña?
@@ -207,17 +208,6 @@ export const LoginPage: React.FC = () => {
               )}
             </Button>
 
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                ¿No tienes una cuenta?{' '}
-                <Link
-                  href="/register"
-                  sx={{ textDecoration: 'none', fontWeight: 'bold' }}
-                >
-                  Regístrate aquí
-                </Link>
-              </Typography>
-            </Box>
           </form>
 
           {/* Footer */}

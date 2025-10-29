@@ -28,7 +28,8 @@ const LoadingSpinner = () => (
 
 // Lazy loading de páginas para mejor performance
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const UploadDocumentsPage = lazy(() => import('./pages/UploadDocumentsPage'));
@@ -137,7 +138,8 @@ function App() {
           <Routes>
             {/* Rutas públicas */}
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             
             {/* Cambio de contraseña (requiere auth) */}
             <Route
