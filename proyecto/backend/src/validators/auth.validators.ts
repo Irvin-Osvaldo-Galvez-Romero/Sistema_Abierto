@@ -91,4 +91,72 @@ export const logoutSchema = {
   }),
 };
 
+/**
+ * Validador para enviar código de verificación
+ */
+export const sendVerificationCodeSchema = {
+  body: Joi.object({
+    email: Joi.string()
+      .email()
+      .required()
+      .messages({
+        'string.email': 'El correo electrónico debe ser válido',
+        'any.required': 'El correo electrónico es requerido',
+      }),
+  }),
+};
+
+/**
+ * Validador para verificar código
+ */
+export const verifyCodeSchema = {
+  body: Joi.object({
+    email: Joi.string()
+      .email()
+      .required()
+      .messages({
+        'string.email': 'El correo electrónico debe ser válido',
+        'any.required': 'El correo electrónico es requerido',
+      }),
+    code: Joi.string()
+      .pattern(/^\d{6}$/)
+      .required()
+      .messages({
+        'string.pattern.base': 'El código debe ser de 6 dígitos',
+        'any.required': 'El código es requerido',
+      }),
+  }),
+};
+
+/**
+ * Validador para restablecer contraseña con código
+ */
+export const resetPasswordWithCodeSchema = {
+  body: Joi.object({
+    email: Joi.string()
+      .email()
+      .required()
+      .messages({
+        'string.email': 'El correo electrónico debe ser válido',
+        'any.required': 'El correo electrónico es requerido',
+      }),
+    code: Joi.string()
+      .pattern(/^\d{6}$/)
+      .required()
+      .messages({
+        'string.pattern.base': 'El código debe ser de 6 dígitos',
+        'any.required': 'El código es requerido',
+      }),
+    password: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+      .required()
+      .messages({
+        'string.min': 'La contraseña debe tener al menos 8 caracteres',
+        'string.pattern.base': 'La contraseña debe contener al menos una mayúscula, una minúscula y un número',
+        'any.required': 'La contraseña es requerida',
+      }),
+  }),
+};
+
 

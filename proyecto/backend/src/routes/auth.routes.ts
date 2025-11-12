@@ -13,6 +13,9 @@ import {
   logoutSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  sendVerificationCodeSchema,
+  verifyCodeSchema,
+  resetPasswordWithCodeSchema,
 } from '../validators/auth.validators';
 
 const router = Router();
@@ -45,6 +48,27 @@ router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.f
  * @access  Public
  */
 router.post('/reset-password', validate(resetPasswordSchema), AuthController.resetPassword);
+
+/**
+ * @route   POST /api/auth/send-verification-code
+ * @desc    Enviar código de verificación por correo
+ * @access  Public
+ */
+router.post('/send-verification-code', validate(sendVerificationCodeSchema), AuthController.sendVerificationCode);
+
+/**
+ * @route   POST /api/auth/verify-code
+ * @desc    Verificar código de verificación
+ * @access  Public
+ */
+router.post('/verify-code', validate(verifyCodeSchema), AuthController.verifyCode);
+
+/**
+ * @route   POST /api/auth/reset-password-with-code
+ * @desc    Restablecer contraseña con código de verificación
+ * @access  Public
+ */
+router.post('/reset-password-with-code', validate(resetPasswordWithCodeSchema), AuthController.resetPasswordWithCode);
 
 /**
  * @route   POST /api/auth/logout

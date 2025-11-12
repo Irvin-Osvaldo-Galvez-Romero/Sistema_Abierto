@@ -44,6 +44,7 @@ export interface UserProfile {
   rol: Rol;
   activo: boolean;
   emailVerificado: boolean;
+  primerLogin?: boolean;
   ultimoAcceso?: string;
   createdAt: string;
   updatedAt: string;

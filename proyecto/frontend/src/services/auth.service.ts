@@ -31,6 +31,38 @@ export class AuthService {
   }
 
   /**
+   * Enviar código de verificación por correo
+   */
+  static async sendVerificationCode(email: string): Promise<void> {
+    await api.post('/auth/send-verification-code', { email });
+  }
+
+  /**
+   * Verificar código de verificación
+   */
+  static async verifyCode(email: string, code: string): Promise<{ token: string }> {
+    const response = await api.post<{ success: boolean; data: { token: string } }>(
+      '/auth/verify-code',
+      { email, code }
+    );
+    return response.data.data;
+  }
+
+  /**
+   * Restablecer contraseña con código de verificación
+   */
+  static async resetPasswordWithCode(email: string, code: string, password: string): Promise<void> {
+    await api.post('/auth/reset-password-with-code', { email, code, password });
+  }
+
+  /**
+   * Restablecer contraseña con token (después de verificar código)
+   */
+  static async resetPasswordWithToken(token: string, password: string): Promise<void> {
+    await api.post('/auth/reset-password', { token, password });
+  }
+
+  /**
    * Renovar token de acceso
    */
   static async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {

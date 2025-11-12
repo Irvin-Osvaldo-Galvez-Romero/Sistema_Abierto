@@ -5,7 +5,7 @@
 
 import { Usuario, Rol, TipoToken } from '@prisma/client';
 import { prisma } from '../config/database';
-import { hashPassword, verifyPassword, generateRandomToken } from '../utils/crypto';
+import { hashPassword, verifyPassword, generateRandomToken, generateVerificationCode } from '../utils/crypto';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { 
   AuthenticationError, 
@@ -140,11 +140,14 @@ export class AuthService {
 
       logger.info(`Login exitoso: ${usuario.email}`);
 
+      // Construir nombre completo
+      const nombreCompleto = `${usuario.nombre} ${usuario.apellidoPaterno}${usuario.apellidoMaterno ? ' ' + usuario.apellidoMaterno : ''}`;
+
       return {
         user: {
           id: usuario.id,
           email: usuario.email,
-          nombre: `${usuario.nombre} ${usuario.apellidoPaterno}`,
+          nombre: nombreCompleto.trim(),
           rol: usuario.rol,
           primerLogin: usuario.primerLogin,
         },
@@ -382,6 +385,226 @@ export class AuthService {
       logger.info(`Contraseña restablecida para usuario: ${tokenRecord.usuario.email}`);
     } catch (error) {
       logger.error('Error en resetPassword:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enviar código de verificación para restablecer contraseña
+   */
+  static async sendVerificationCode(email: string): Promise<void> {
+    try {
+      // Buscar usuario por email
+      const usuario = await prisma.usuario.findUnique({
+        where: { email },
+      });
+
+      if (!usuario) {
+        // Por seguridad, no revelamos si el email existe o no
+        logger.info(`Solicitud de código de verificación para email no registrado: ${email}`);
+        return;
+      }
+
+      // Verificar si la cuenta está activa
+      if (!usuario.activo) {
+        logger.info(`Solicitud de código de verificación para cuenta inactiva: ${email}`);
+        return;
+      }
+
+      // Generar código de verificación de 6 dígitos
+      const verificationCode = generateVerificationCode(6);
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+
+      // Revocar códigos anteriores del mismo tipo para este usuario
+      await prisma.tokenSesion.updateMany({
+        where: {
+          usuarioId: usuario.id,
+          tipo: TipoToken.VERIFICATION_CODE,
+          revocado: false,
+        },
+        data: { revocado: true },
+      });
+
+      // Guardar código en base de datos (hasheado por seguridad)
+      const hashedCode = await hashPassword(verificationCode);
+      await prisma.tokenSesion.create({
+        data: {
+          token: hashedCode,
+          tipo: TipoToken.VERIFICATION_CODE,
+          usuarioId: usuario.id,
+          expiraEn: expiresAt,
+        },
+      });
+
+      // Enviar correo con el código
+      await EmailService.sendVerificationCode({
+        nombre: usuario.nombre,
+        apellidoPaterno: usuario.apellidoPaterno,
+        apellidoMaterno: usuario.apellidoMaterno || '',
+        email: usuario.email,
+        code: verificationCode,
+        rol: usuario.rol,
+      });
+      logger.info(`📧 Código de verificación enviado a: ${email}`);
+
+      // Registrar actividad
+      await this.logActivity(
+        usuario.id,
+        'SEND_VERIFICATION_CODE',
+        'Código de verificación enviado para restablecimiento de contraseña',
+      );
+
+      logger.info(`Código de verificación procesado para: ${email}`);
+    } catch (error) {
+      logger.error('Error en sendVerificationCode:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verificar código de verificación
+   */
+  static async verifyCode(email: string, code: string): Promise<{ valid: boolean; token?: string }> {
+    try {
+      // Buscar usuario por email
+      const usuario = await prisma.usuario.findUnique({
+        where: { email },
+      });
+
+      if (!usuario || !usuario.activo) {
+        return { valid: false };
+      }
+
+      // Buscar códigos de verificación activos del usuario
+      const activeCodes = await prisma.tokenSesion.findMany({
+        where: {
+          usuarioId: usuario.id,
+          tipo: TipoToken.VERIFICATION_CODE,
+          revocado: false,
+          expiraEn: {
+            gt: new Date(),
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      // Verificar el código contra todos los códigos activos
+      for (const codeRecord of activeCodes) {
+        const isValid = await verifyPassword(code, codeRecord.token);
+        if (isValid) {
+          // Generar token temporal para el cambio de contraseña
+          const resetToken = generateRandomToken(32);
+          const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+          // Crear token de restablecimiento
+          await prisma.tokenSesion.create({
+            data: {
+              token: resetToken,
+              tipo: TipoToken.RESET_PASSWORD,
+              usuarioId: usuario.id,
+              expiraEn: expiresAt,
+            },
+          });
+
+          // Revocar el código usado
+          await prisma.tokenSesion.update({
+            where: { id: codeRecord.id },
+            data: { revocado: true },
+          });
+
+          // Registrar actividad
+          await this.logActivity(
+            usuario.id,
+            'VERIFY_CODE',
+            'Código de verificación validado exitosamente',
+          );
+
+          logger.info(`Código de verificación validado para usuario: ${email}`);
+
+          return { valid: true, token: resetToken };
+        }
+      }
+
+      // Si no se encontró un código válido
+      logger.warn(`Intento de verificación con código inválido para: ${email}`);
+      return { valid: false };
+    } catch (error) {
+      logger.error('Error en verifyCode:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Restablecer contraseña con código de verificación
+   */
+  static async resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<void> {
+    try {
+      // Primero verificar el código
+      const verification = await this.verifyCode(email, code);
+
+      if (!verification.valid || !verification.token) {
+        throw new AuthenticationError('Código de verificación inválido o expirado');
+      }
+
+      // Buscar el token de restablecimiento generado
+      const tokenRecord = await prisma.tokenSesion.findUnique({
+        where: { token: verification.token },
+        include: { usuario: true },
+      });
+
+      if (!tokenRecord || tokenRecord.tipo !== TipoToken.RESET_PASSWORD) {
+        throw new AuthenticationError('Token de restablecimiento inválido');
+      }
+
+      // Verificar que el token no haya expirado
+      if (tokenRecord.expiraEn < new Date()) {
+        throw new AuthenticationError('Token expirado');
+      }
+
+      // Verificar que la cuenta esté activa
+      if (!tokenRecord.usuario.activo) {
+        throw new AuthenticationError('Cuenta desactivada');
+      }
+
+      // Hashear nueva contraseña
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Actualizar contraseña del usuario
+      await prisma.usuario.update({
+        where: { id: tokenRecord.usuario.id },
+        data: {
+          password: hashedPassword,
+          primerLogin: false,
+        },
+      });
+
+      // Revocar token usado
+      await prisma.tokenSesion.update({
+        where: { id: tokenRecord.id },
+        data: { revocado: true },
+      });
+
+      // Revocar todos los tokens de sesión del usuario
+      await prisma.tokenSesion.updateMany({
+        where: {
+          usuarioId: tokenRecord.usuario.id,
+          tipo: TipoToken.REFRESH,
+        },
+        data: { revocado: true },
+      });
+
+      // Registrar actividad
+      await this.logActivity(
+        tokenRecord.usuario.id,
+        'RESET_PASSWORD_WITH_CODE',
+        'Contraseña restablecida exitosamente con código de verificación',
+      );
+
+      logger.info(`Contraseña restablecida con código para usuario: ${email}`);
+    } catch (error) {
+      logger.error('Error en resetPasswordWithCode:', error);
       throw error;
     }
   }

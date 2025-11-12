@@ -98,14 +98,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     
     try {
-      const userData = await AuthService.getMe();
+      const userData = await AuthService.getProfile();
+      
+      // Construir nombre completo
+      const nombreCompleto = `${userData.nombre} ${userData.apellidoPaterno}${userData.apellidoMaterno ? ' ' + userData.apellidoMaterno : ''}`;
       
       set({
         user: {
-          id: userData.userId,
+          id: userData.id,
           email: userData.email,
-          nombre: userData.email.split('@')[0], // Temporal
+          nombre: nombreCompleto.trim(),
           rol: userData.rol,
+          primerLogin: userData.primerLogin,
         },
         isAuthenticated: true,
         isLoading: false,

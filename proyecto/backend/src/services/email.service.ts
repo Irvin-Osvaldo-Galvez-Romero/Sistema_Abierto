@@ -31,6 +31,15 @@ interface PasswordResetData {
   rol: string;
 }
 
+interface VerificationCodeData {
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  email: string;
+  code: string;
+  rol: string;
+}
+
 export class EmailService {
   private static transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -38,7 +47,7 @@ export class EmailService {
     secure: false, // true para puerto 465, false para otros puertos
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
+      pass: process.env.SMTP_PASSWORD?.replace(/\s+/g, '') || process.env.SMTP_PASSWORD, // Quitar espacios de la contraseña
     },
   });
 
@@ -58,9 +67,23 @@ export class EmailService {
         messageId: info.messageId,
         accepted: info.accepted,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ Error al enviar correo:', error);
-      throw new Error('No se pudo enviar el correo electrónico');
+      
+      // Mensajes de error más descriptivos
+      let errorMessage = 'No se pudo enviar el correo electrónico';
+      
+      if (error.code === 'EAUTH') {
+        errorMessage = 'Error de autenticación con el servidor de correo. Verifica las credenciales SMTP.';
+      } else if (error.code === 'ECONNECTION') {
+        errorMessage = 'No se pudo conectar al servidor de correo. Verifica la configuración SMTP.';
+      } else if (error.responseCode === 535) {
+        errorMessage = 'Credenciales de correo inválidas. Verifica el usuario y contraseña SMTP.';
+      } else if (error.message) {
+        errorMessage = `Error al enviar correo: ${error.message}`;
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 
@@ -721,6 +744,199 @@ export class EmailService {
     await this.sendEmail({
       to: data.email,
       subject: '🔐 Restablecer Contraseña - Sistema TESCHI',
+      html,
+    });
+  }
+
+  /**
+   * Enviar código de verificación para restablecimiento de contraseña
+   */
+  static async sendVerificationCode(data: VerificationCodeData): Promise<void> {
+    const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Código de Verificación - TESCHI</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 5px 0 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 30px 20px;
+    }
+    .greeting {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .code-box {
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+      color: white;
+      padding: 30px;
+      margin: 30px 0;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .code-box .code-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .code-box .code-value {
+      font-size: 48px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 8px;
+      margin: 10px 0;
+    }
+    .info-box {
+      background-color: #fff3e0;
+      border-left: 4px solid #ff9800;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .info-box h3 {
+      margin: 0 0 10px 0;
+      color: #e65100;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .info-box p {
+      margin: 0;
+      color: #e65100;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .warning-box {
+      background-color: #ffebee;
+      border-left: 4px solid #f44336;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .warning-box h3 {
+      margin: 0 0 10px 0;
+      color: #c62828;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .warning-box ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #c62828;
+      font-size: 13px;
+    }
+    .warning-box li {
+      margin: 5px 0;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .footer p {
+      margin: 5px 0;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e0e0e0;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Código de Verificación</h1>
+      <p>Tecnológico de Estudios Superiores de Chimalhuacán</p>
+    </div>
+    
+    <div class="content">
+      <div class="greeting">
+        <p>Estimado(a) <strong>${data.nombre} ${data.apellidoPaterno} ${data.apellidoMaterno}</strong>,</p>
+        <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el Sistema de Gestión Documental del TESCHI.</p>
+      </div>
+
+      <div class="code-box">
+        <div class="code-label">Tu Código de Verificación</div>
+        <div class="code-value">${data.code}</div>
+      </div>
+
+      <div class="info-box">
+        <h3>📧 Instrucciones</h3>
+        <p>Ingresa este código en la página de restablecimiento de contraseña para continuar con el proceso. El código expira en 10 minutos.</p>
+      </div>
+
+      <div class="warning-box">
+        <h3>⚠️ Importante - Seguridad</h3>
+        <ul>
+          <li><strong>Este código expira en 10 minutos</strong> por seguridad</li>
+          <li><strong>Si no solicitaste este cambio</strong>, ignora este correo</li>
+          <li><strong>Tu contraseña actual sigue siendo válida</strong> hasta que la cambies</li>
+          <li><strong>No compartas este código</strong> con nadie</li>
+          <li><strong>Solo se puede usar una vez</strong> para restablecer tu contraseña</li>
+        </ul>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size: 13px; color: #666; line-height: 1.6;">
+        <p><strong>¿Necesitas ayuda?</strong></p>
+        <p>Si tienes problemas para restablecer tu contraseña o alguna duda, contacta al personal administrativo del TESCHI.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>Tecnológico de Estudios Superiores de Chimalhuacán</strong></p>
+      <p>Sistema de Gestión Documental Digital</p>
+      <p style="margin-top: 10px; font-size: 11px; color: #999;">
+        Este correo fue enviado automáticamente. Por favor no respondas a este mensaje.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await this.sendEmail({
+      to: data.email,
+      subject: '🔐 Código de Verificación - Sistema TESCHI',
       html,
     });
   }

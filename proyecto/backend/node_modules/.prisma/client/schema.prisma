@@ -75,6 +75,7 @@ enum TipoToken {
   REFRESH
   RESET_PASSWORD
   VERIFY_EMAIL
+  VERIFICATION_CODE
 }
 
 // ==========================================

@@ -173,5 +173,73 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/auth/send-verification-code
+   * Enviar código de verificación por correo
+   */
+  static async sendVerificationCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+
+      await AuthService.sendVerificationCode(email);
+
+      res.status(200).json({
+        success: true,
+        message: 'Si el correo está registrado, recibirás un código de verificación',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/verify-code
+   * Verificar código de verificación
+   */
+  static async verifyCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, code } = req.body;
+
+      const result = await AuthService.verifyCode(email, code);
+
+      if (!result.valid) {
+        res.status(400).json({
+          success: false,
+          message: 'Código de verificación inválido o expirado',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Código verificado exitosamente',
+        data: {
+          token: result.token,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/reset-password-with-code
+   * Restablecer contraseña con código de verificación
+   */
+  static async resetPasswordWithCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, code, password } = req.body;
+
+      await AuthService.resetPasswordWithCode(email, code, password);
+
+      res.status(200).json({
+        success: true,
+        message: 'Contraseña restablecida exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

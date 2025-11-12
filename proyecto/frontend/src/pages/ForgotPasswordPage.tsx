@@ -1,6 +1,6 @@
 /**
  * Página de Olvidé mi Contraseña
- * Formulario para solicitar restablecimiento de contraseña
+ * Formulario para restablecer contraseña con código de verificación
  */
 
 import React, { useState } from 'react';
@@ -15,29 +15,61 @@ import {
   InputAdornment,
   Alert,
   CircularProgress,
+  Stepper,
+  Step,
+  StepLabel,
+  IconButton,
 } from '@mui/material';
 import {
   Email,
   School,
   ArrowBack,
+  VpnKey,
+  Lock,
+  Visibility,
+  VisibilityOff,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/auth.service';
 import toast from 'react-hot-toast';
 
+const steps = ['Ingresa tu correo', 'Verifica el código', 'Nueva contraseña'];
+
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
+  const [activeStep, setActiveStep] = useState(0);
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
     setError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setCode(value);
+    setError(null);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    setError(null);
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value);
+    setError(null);
+  };
+
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email) {
@@ -49,11 +81,75 @@ export const ForgotPasswordPage: React.FC = () => {
     setError(null);
 
     try {
-      await AuthService.forgotPassword(email);
-      setIsSubmitted(true);
-      toast.success('Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña');
+      await AuthService.sendVerificationCode(email);
+      setActiveStep(1);
+      toast.success('Código de verificación enviado a tu correo');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Error al enviar solicitud de restablecimiento';
+      const errorMessage = error.response?.data?.message || 'Error al enviar código de verificación';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!code || code.length !== 6) {
+      setError('El código debe tener 6 dígitos');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await AuthService.verifyCode(email, code);
+      setResetToken(result.token);
+      setActiveStep(2);
+      toast.success('Código verificado correctamente');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Código de verificación inválido o expirado';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!password || password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      setError('La contraseña debe contener al menos una mayúscula, una minúscula y un número');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (!resetToken) {
+      setError('Token de verificación no encontrado. Por favor, verifica el código nuevamente.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await AuthService.resetPasswordWithToken(resetToken, password);
+      toast.success('Contraseña restablecida exitosamente');
+      navigate('/login');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Error al restablecer la contraseña';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -63,6 +159,248 @@ export const ForgotPasswordPage: React.FC = () => {
 
   const handleBackToLogin = () => {
     navigate('/login');
+  };
+
+  const handleBack = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1);
+      setError(null);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (activeStep) {
+      case 0:
+        return (
+          <form onSubmit={handleSendCode}>
+            <TextField
+              fullWidth
+              label="Correo Electrónico"
+              name="email"
+              type="email"
+              value={email}
+              onChange={handleEmailChange}
+              required
+              margin="normal"
+              autoFocus
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+              helperText="Ingresa el correo electrónico asociado a tu cuenta"
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={isLoading || !email}
+              sx={{
+                mt: 3,
+                mb: 2,
+                height: 50,
+                fontSize: '1.1rem',
+                textTransform: 'none',
+                borderRadius: 2,
+              }}
+            >
+              {isLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Enviar Código'
+              )}
+            </Button>
+          </form>
+        );
+
+      case 1:
+        return (
+          <form onSubmit={handleVerifyCode}>
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2">
+                Hemos enviado un código de 6 dígitos a <strong>{email}</strong>.
+                Revisa tu bandeja de entrada y tu carpeta de spam.
+              </Typography>
+            </Alert>
+
+            <TextField
+              fullWidth
+              label="Código de Verificación"
+              name="code"
+              type="text"
+              value={code}
+              onChange={handleCodeChange}
+              required
+              margin="normal"
+              autoFocus
+              disabled={isLoading}
+              inputProps={{
+                maxLength: 6,
+                pattern: '[0-9]*',
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <VpnKey color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+              helperText="Ingresa el código de 6 dígitos que recibiste por correo"
+            />
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={handleBack}
+                disabled={isLoading}
+                sx={{ flex: 1 }}
+              >
+                Atrás
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={isLoading || code.length !== 6}
+                sx={{
+                  flex: 2,
+                  height: 50,
+                  fontSize: '1.1rem',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                }}
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Verificar Código'
+                )}
+              </Button>
+            </Box>
+
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                ¿No recibiste el código?{' '}
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={handleSendCode}
+                  sx={{ textDecoration: 'none', fontWeight: 'bold' }}
+                  disabled={isLoading}
+                >
+                  Reenviar código
+                </Link>
+              </Typography>
+            </Box>
+          </form>
+        );
+
+      case 2:
+        return (
+          <form onSubmit={handleResetPassword}>
+            <TextField
+              fullWidth
+              label="Nueva Contraseña"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePasswordChange}
+              required
+              margin="normal"
+              autoFocus
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              helperText="Mínimo 8 caracteres, debe incluir mayúscula, minúscula y número"
+            />
+
+            <TextField
+              fullWidth
+              label="Confirmar Contraseña"
+              name="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              required
+              margin="normal"
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              helperText="Confirma tu nueva contraseña"
+            />
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={handleBack}
+                disabled={isLoading}
+                sx={{ flex: 1 }}
+              >
+                Atrás
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={isLoading || !password || !confirmPassword}
+                sx={{
+                  flex: 2,
+                  height: 50,
+                  fontSize: '1.1rem',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                }}
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Cambiar Contraseña'
+                )}
+              </Button>
+            </Box>
+          </form>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -93,8 +431,19 @@ export const ForgotPasswordPage: React.FC = () => {
               ¿Olvidaste tu contraseña?
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Ingresa tu correo electrónico para recibir instrucciones de restablecimiento
+              Restablece tu contraseña siguiendo estos pasos
             </Typography>
+          </Box>
+
+          {/* Stepper */}
+          <Box sx={{ mb: 4 }}>
+            <Stepper activeStep={activeStep} alternativeLabel>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
           </Box>
 
           {/* Mensaje de Error */}
@@ -104,105 +453,23 @@ export const ForgotPasswordPage: React.FC = () => {
             </Alert>
           )}
 
-          {/* Mensaje de Éxito */}
-          {isSubmitted ? (
-            <Box sx={{ textAlign: 'center' }}>
-              <Alert severity="success" sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  ¡Solicitud enviada!
-                </Typography>
-                <Typography variant="body2">
-                  Si el correo <strong>{email}</strong> está registrado en nuestro sistema, 
-                  recibirás un correo con instrucciones para restablecer tu contraseña.
-                </Typography>
-              </Alert>
+          {/* Contenido del paso actual */}
+          {renderStepContent()}
 
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  ¿No recibiste el correo? Revisa tu carpeta de spam o intenta nuevamente.
-                </Typography>
-                
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setIsSubmitted(false);
-                    setEmail('');
-                  }}
-                  sx={{ mr: 2 }}
-                >
-                  Intentar con otro correo
-                </Button>
-                
-                <Button
-                  variant="contained"
-                  onClick={handleBackToLogin}
-                  startIcon={<ArrowBack />}
-                >
-                  Volver al Login
-                </Button>
-              </Box>
-            </Box>
-          ) : (
-            /* Formulario */
-            <form onSubmit={handleSubmit}>
-              <TextField
-                fullWidth
-                label="Correo Electrónico"
-                name="email"
-                type="email"
-                value={email}
-                onChange={handleChange}
-                required
-                margin="normal"
-                autoFocus
-                disabled={isLoading}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                helperText="Ingresa el correo electrónico asociado a tu cuenta"
-              />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={isLoading || !email}
-                sx={{
-                  mt: 3,
-                  mb: 2,
-                  height: 50,
-                  fontSize: '1.1rem',
-                  textTransform: 'none',
-                  borderRadius: 2,
-                }}
+          {/* Botón para volver al login */}
+          <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              ¿Recordaste tu contraseña?{' '}
+              <Link
+                component="button"
+                variant="body2"
+                onClick={handleBackToLogin}
+                sx={{ textDecoration: 'none', fontWeight: 'bold' }}
               >
-                {isLoading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  'Enviar Instrucciones'
-                )}
-              </Button>
-
-              <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  ¿Recordaste tu contraseña?{' '}
-                  <Link
-                    component="button"
-                    variant="body2"
-                    onClick={handleBackToLogin}
-                    sx={{ textDecoration: 'none', fontWeight: 'bold' }}
-                  >
-                    Inicia sesión
-                  </Link>
-                </Typography>
-              </Box>
-            </form>
-          )}
+                Inicia sesión
+              </Link>
+            </Typography>
+          </Box>
 
           {/* Footer */}
           <Box sx={{ textAlign: 'center', mt: 4 }}>
