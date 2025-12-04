@@ -24,6 +24,7 @@ import {
   Assignment,
   Logout,
   Notifications,
+  Psychology,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -69,6 +70,13 @@ export const AdminDashboardPage: React.FC = () => {
       color: '#ef4444',
       action: () => navigate('/admin/creditos'),
     },
+    {
+      icon: <Psychology sx={{ fontSize: 40 }} />,
+      title: 'Pruebas Modelo Dual Pendientes',
+      value: '0',
+      color: '#9c27b0',
+      action: () => navigate('/admin/modelo-dual'),
+    },
   ]);
 
   useEffect(() => {
@@ -100,6 +108,17 @@ export const AdminDashboardPage: React.FC = () => {
       const creditosRes = await api.get('/creditos', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      let pruebasModeloDual: any[] = [];
+      try {
+        const modeloDualRes = await api.get('/modelo-dual', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        pruebasModeloDual = modeloDualRes.data.data || [];
+      } catch (error) {
+        // Si la API aún no está disponible, simplemente usar array vacío
+        console.warn('No se pudieron cargar las pruebas del Modelo Dual:', error);
+      }
 
       const estudiantes = estudiantesRes.data.data || [];
       const docentes = docentesRes.data.data || [];
@@ -108,6 +127,7 @@ export const AdminDashboardPage: React.FC = () => {
 
       const pendientes = documentos.filter((d: any) => d.estatus === 'PENDIENTE').length;
       const aprobados = documentos.filter((d: any) => d.estatus === 'APROBADO').length;
+      const pruebasPendientes = pruebasModeloDual.filter((p: any) => p.estatus === 'PENDIENTE' || p.estatus === 'EN_REVISION').length;
 
       // Los créditos vienen agrupados por estudiante (array de arrays)
       // Cada elemento del array principal es un array de créditos de un estudiante
@@ -160,6 +180,13 @@ export const AdminDashboardPage: React.FC = () => {
           value: creditosPendientes.toString(),
           color: '#ef4444',
           action: () => navigate('/admin/creditos'),
+        },
+        {
+          icon: <Psychology sx={{ fontSize: 40 }} />,
+          title: 'Pruebas Modelo Dual Pendientes',
+          value: pruebasPendientes.toString(),
+          color: '#9c27b0',
+          action: () => navigate('/admin/modelo-dual'),
         },
       ]);
     } catch (error) {
@@ -339,6 +366,25 @@ export const AdminDashboardPage: React.FC = () => {
               }}
             >
               Validar Créditos
+            </Button>
+          </Grid>
+          <Grid item xs={12} md={6} lg={4}>
+            <Button
+              fullWidth
+              variant="contained"
+              size="large"
+              startIcon={<Psychology />}
+              onClick={() => navigate('/admin/modelo-dual')}
+              sx={{
+                height: 100,
+                fontSize: '1.1rem',
+                backgroundColor: '#008000',
+                '&:hover': {
+                  backgroundColor: '#7b1fa2',
+                },
+              }}
+            >
+              Revisar Pruebas Modelo Dual
             </Button>
           </Grid>
           <Grid item xs={12} md={6}>

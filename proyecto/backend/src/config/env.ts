@@ -62,6 +62,8 @@ export const config = {
   // CORS
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    // Permitir también el puerto por defecto de React
+    credentials: true,
   },
 
   // Rate Limiting

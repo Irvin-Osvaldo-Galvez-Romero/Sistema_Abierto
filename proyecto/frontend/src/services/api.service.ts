@@ -5,7 +5,21 @@
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+// Obtener la URL de la API
+// En desarrollo, React Scripts usa el proxy configurado en package.json
+// En producción, usa la variable de entorno o la URL por defecto
+const getApiUrl = () => {
+  // Si estamos en desarrollo y hay un proxy configurado, usar ruta relativa
+  if (process.env.NODE_ENV === 'development') {
+    // El proxy en package.json redirige /api a http://localhost:4000/api
+    return '/api';
+  }
+  
+  // En producción, usar variable de entorno o URL por defecto
+  return process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+};
+
+const API_URL = getApiUrl();
 
 // Crear instancia de Axios
 const api: AxiosInstance = axios.create({

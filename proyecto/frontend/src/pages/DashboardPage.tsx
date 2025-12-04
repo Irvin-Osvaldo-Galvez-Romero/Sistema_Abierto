@@ -24,6 +24,7 @@ import {
   Dashboard as DashboardIcon,
   Notifications,
   School,
+  Psychology,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -210,7 +211,7 @@ export const DashboardPage: React.FC = () => {
               Ver Notificaciones
             </Button>
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} md={6}>
             <Button
               fullWidth
               variant="outlined"
@@ -232,6 +233,30 @@ export const DashboardPage: React.FC = () => {
               }}
             >
               Gestionar Créditos Complementarios
+            </Button>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Button
+              fullWidth
+              variant="outlined"
+              size="large"
+              startIcon={<Psychology />}
+              onClick={() => navigate('/modelo-dual')}
+              sx={{
+                height: 100,
+                borderRadius: 2,
+                fontSize: '1.2rem',
+                borderColor: '#008000',
+                color: '#008000',
+                borderWidth: 2,
+                '&:hover': {
+                  borderColor: '#006000',
+                  color: '#006000',
+                  borderWidth: 2,
+                },
+              }}
+            >
+              Modelo Dual - Pruebas Psicológicas
             </Button>
           </Grid>
         </Grid>

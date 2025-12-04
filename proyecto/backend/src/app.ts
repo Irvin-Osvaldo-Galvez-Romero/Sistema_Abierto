@@ -24,8 +24,29 @@ const app: Application = express();
 app.use(helmet());
 
 // CORS - Cross-Origin Resource Sharing
+// Permitir múltiples orígenes en desarrollo
+const allowedOrigins = process.env.NODE_ENV === 'development' 
+  ? ['http://localhost:3000', 'http://localhost:4000', 'http://127.0.0.1:3000', 'http://127.0.0.1:4000']
+  : (config.cors.origin || 'http://localhost:3000');
+
 app.use(cors({
-  origin: config.cors.origin,
+  origin: (origin, callback) => {
+    // En desarrollo, permitir todos los orígenes locales
+    if (process.env.NODE_ENV === 'development') {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Permitir en desarrollo para facilitar testing
+      }
+    } else {
+      // En producción, validar origen
+      if (origin && allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('No permitido por CORS'));
+      }
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -92,6 +113,7 @@ import notificacionRoutes from './routes/notificacion.routes';
 import profesorRoutes from './routes/profesor.routes';
 import passwordRoutes from './routes/password.routes';
 import creditoRoutes from './routes/credito.routes';
+import modeloDualRoutes from './routes/modelo-dual.routes';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -126,6 +148,9 @@ app.use('/api/notificaciones', notificacionRoutes);
 // Rutas de créditos complementarios
 app.use('/api/creditos', creditoRoutes);
 
+// Rutas de Modelo Dual
+app.use('/api/modelo-dual', modeloDualRoutes);
+
 // Endpoint raíz de la API
 app.get('/api', (req, res) => {
   res.status(200).json({
@@ -139,6 +164,7 @@ app.get('/api', (req, res) => {
       upload: '/api/upload',
       notificaciones: '/api/notificaciones',
       creditos: '/api/creditos',
+      modeloDual: '/api/modelo-dual',
       salud: ['/health', '/api/health'],
     },
   });
