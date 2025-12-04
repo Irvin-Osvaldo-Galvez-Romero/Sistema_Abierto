@@ -29,7 +29,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { Download, TaskAlt, WarningAmber, ArrowBack, Psychology, CloudUpload, Description, Business, Add, QrCode, OpenInNew } from '@mui/icons-material';
+import { Download, TaskAlt, WarningAmber, ArrowBack, Psychology, CloudUpload, Description, Business, Add, QrCode, OpenInNew, UploadFile } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import ModeloDualService from '../services/modelo-dual.service';
 import {
@@ -617,6 +617,39 @@ const AdminModeloDualPage: React.FC = () => {
                                   Ver QR
                                 </Button>
                               )}
+                              {formato.archivoLocal && (
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  startIcon={<Download />}
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(`/api/modelo-dual/formatos/${formato.id}/archivo`, {
+                                        headers: {
+                                          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                                        },
+                                      });
+                                      if (response.ok) {
+                                        const blob = await response.blob();
+                                        const url = window.URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = formato.nombre + (formato.mimeType?.includes('pdf') ? '.pdf' : formato.mimeType?.includes('word') ? '.docx' : '');
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        window.URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+                                      } else {
+                                        toast.error('Error al descargar el archivo');
+                                      }
+                                    } catch (error) {
+                                      toast.error('Error al descargar el archivo');
+                                    }
+                                  }}
+                                >
+                                  Descargar Archivo
+                                </Button>
+                              )}
                             </Stack>
                           </Stack>
                         </CardContent>
@@ -632,30 +665,73 @@ const AdminModeloDualPage: React.FC = () => {
             <Box sx={{ p: 3 }}>
               <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">Convenios</Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => {
-                    setConvenioForm({
-                      nombreEmpresa: '',
-                      razonSocial: '',
-                      contacto: '',
-                      email: '',
-                      telefono: '',
-                      direccion: '',
-                      sector: '',
-                      fechaInicio: '',
-                      fechaFin: '',
-                      descripcion: '',
-                      condiciones: '',
-                      urlConvenio: '',
-                      qrCode: '',
-                    });
-                    setShowConvenioDialog(true);
-                  }}
-                >
-                  Crear Convenio
-                </Button>
+                <Stack direction="row" spacing={2}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<UploadFile />}
+                    component="label"
+                  >
+                    Importar desde Excel
+                    <input
+                      type="file"
+                      hidden
+                      accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        try {
+                          const resultado = await ModeloDualService.importarConvenios(file);
+                          toast.success(
+                            `Se importaron ${resultado.importados} de ${resultado.total} convenios correctamente${
+                              resultado.errores > 0 ? `. ${resultado.errores} errores.` : ''
+                            }`
+                          );
+                          
+                          if (resultado.errores > 0 && resultado.detallesErrores?.length > 0) {
+                            console.warn('Errores de importación:', resultado.detallesErrores);
+                            // Mostrar errores en un alert o dialog si hay muchos
+                            if (resultado.detallesErrores.length <= 5) {
+                              resultado.detallesErrores.forEach((error: string) => {
+                                toast.error(error, { duration: 5000 });
+                              });
+                            } else {
+                              toast.error(`Hay ${resultado.errores} errores. Revisa la consola para más detalles.`, { duration: 5000 });
+                            }
+                          }
+                          
+                          cargarDatos();
+                        } catch (error: any) {
+                          toast.error(error.response?.data?.message || 'Error al importar convenios desde Excel');
+                        }
+                      }}
+                    />
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => {
+                      setConvenioForm({
+                        nombreEmpresa: '',
+                        razonSocial: '',
+                        contacto: '',
+                        email: '',
+                        telefono: '',
+                        direccion: '',
+                        sector: '',
+                        fechaInicio: '',
+                        fechaFin: '',
+                        descripcion: '',
+                        condiciones: '',
+                        urlConvenio: '',
+                        qrCode: '',
+                      });
+                      setShowConvenioDialog(true);
+                    }}
+                  >
+                    Crear Convenio
+                  </Button>
+                </Stack>
               </Box>
               {convenios.length === 0 ? (
                 <Alert severity="info">No hay convenios creados</Alert>
@@ -828,7 +904,7 @@ const AdminModeloDualPage: React.FC = () => {
                   <input
                     type="file"
                     hidden
-                    accept="application/pdf"
+                    accept="application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null;
                       setDialogRevision((prev) => ({ ...prev, archivoFirmado: file }));
@@ -924,7 +1000,7 @@ const AdminModeloDualPage: React.FC = () => {
                 <input
                   type="file"
                   hidden
-                  accept="application/pdf"
+                  accept="application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setFormatoForm({ ...formatoForm, archivo: file });

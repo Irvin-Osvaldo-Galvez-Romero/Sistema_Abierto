@@ -14,6 +14,10 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   // Tipos MIME permitidos
   const allowedMimeTypes = [
     'application/pdf',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
     'image/jpeg',
     'image/jpg',
     'image/png',
@@ -22,7 +26,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new ValidationError('Solo se permiten archivos PDF o imágenes (JPG, PNG)'));
+    cb(new ValidationError('Solo se permiten archivos PDF, Word (.doc, .docx), Excel (.xls, .xlsx) o imágenes (JPG, PNG)'));
   }
 };
 

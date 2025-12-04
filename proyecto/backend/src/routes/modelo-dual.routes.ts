@@ -71,6 +71,13 @@ router.post(
   ModeloDualController.crearConvenio
 );
 
+router.post(
+  '/convenios/importar',
+  authorize(Rol.ADMINISTRADOR, Rol.SUPER_ADMIN, Rol.PERSONAL_ADMINISTRATIVO),
+  upload.single('archivo'),
+  ModeloDualController.importarConvenios
+);
+
 // Proceso del estudiante
 router.post(
   '/inscribir',

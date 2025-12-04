@@ -378,7 +378,7 @@ export const AdminDashboardPage: React.FC = () => {
               sx={{
                 height: 100,
                 fontSize: '1.1rem',
-                backgroundColor: '#9c27b0',
+                backgroundColor: '#008000',
                 '&:hover': {
                   backgroundColor: '#7b1fa2',
                 },

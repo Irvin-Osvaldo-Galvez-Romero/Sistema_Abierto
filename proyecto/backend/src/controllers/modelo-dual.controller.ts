@@ -481,6 +481,36 @@ export class ModeloDualController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/modelo-dual/convenios/importar
+   * Importar convenios desde archivo Excel (administrador)
+   */
+  static async importarConvenios(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'No autenticado' });
+        return;
+      }
+
+      if (!req.file) {
+        throw new ValidationError('Debes proporcionar un archivo Excel');
+      }
+
+      const resultado = await ModeloDualService.importarConveniosDesdeExcel({
+        archivo: req.file,
+        creadoPorId: req.user.userId,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Se importaron ${resultado.importados} de ${resultado.total} convenios correctamente${resultado.errores > 0 ? `. ${resultado.errores} errores.` : ''}`,
+        data: resultado,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default ModeloDualController;

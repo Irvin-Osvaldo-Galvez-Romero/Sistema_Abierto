@@ -165,6 +165,19 @@ const ModeloDualService = {
   },
 
   /**
+   * Importar convenios desde Excel (admin)
+   */
+  async importarConvenios(archivo: File) {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    const response = await api.post(`${resource}/convenios/importar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data;
+  },
+
+  /**
    * Inscribir estudiante al Modelo Dual
    */
   async inscribirEstudiante(payload: {
