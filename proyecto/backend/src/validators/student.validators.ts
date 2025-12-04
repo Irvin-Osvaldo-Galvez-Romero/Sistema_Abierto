@@ -124,6 +124,39 @@ export const updateStudentSchema = {
   }),
   
   body: Joi.object({
+    // Campos del Usuario
+    nombre: Joi.string()
+      .min(2)
+      .max(100)
+      .optional(),
+    
+    apellidoPaterno: Joi.string()
+      .min(2)
+      .max(100)
+      .optional()
+      .allow(''),
+    
+    apellidoMaterno: Joi.string()
+      .min(2)
+      .max(100)
+      .optional()
+      .allow(''),
+    
+    email: Joi.string()
+      .email()
+      .optional(),
+    
+    telefono: Joi.string()
+      .pattern(/^[0-9]{10}$/)
+      .optional()
+      .allow(''),
+    
+    // Campos del Estudiante
+    matricula: Joi.string()
+      .min(5)
+      .max(20)
+      .optional(),
+    
     fechaNacimiento: Joi.date()
       .max('now')
       .optional(),

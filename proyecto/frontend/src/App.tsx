@@ -41,6 +41,8 @@ const AdminProfessorsPage = lazy(() => import('./pages/AdminProfessorsPage'));
 const AdminDocumentsPage = lazy(() => import('./pages/AdminDocumentsPage'));
 const AdminNewStudentPage = lazy(() => import('./pages/AdminNewStudentPage'));
 const AdminNewProfessorPage = lazy(() => import('./pages/AdminNewProfessorPage'));
+const StudentCreditsPage = lazy(() => import('./pages/StudentCreditsPage'));
+const AdminCreditsPage = lazy(() => import('./pages/AdminCreditsPage'));
 
 // Tema personalizado con colores de la universidad
 const theme = createTheme({
@@ -171,6 +173,15 @@ function App() {
           />
           
           <Route
+            path="/creditos"
+            element={
+              <ProtectedRoute>
+                <StudentCreditsPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
             path="/notificaciones"
             element={
               <ProtectedRoute>
@@ -221,6 +232,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDocumentsPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/admin/creditos"
+            element={
+              <ProtectedRoute>
+                <AdminCreditsPage />
               </ProtectedRoute>
             }
           />

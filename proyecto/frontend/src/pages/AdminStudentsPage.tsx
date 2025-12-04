@@ -20,9 +20,9 @@ import {
   Chip,
   TextField,
   InputAdornment,
+  Stack,
 } from '@mui/material';
 import {
-  School,
   ArrowBack,
   Search,
   Visibility,
@@ -34,9 +34,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import api from '../services/api.service';
+import PageHeader from '../components/PageHeader';
 
 interface Estudiante {
   id: string;
@@ -74,7 +75,7 @@ export const AdminStudentsPage: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:3001/api/students', {
+      const response = await api.get('/students', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -94,10 +95,10 @@ export const AdminStudentsPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:3001/api/students/search?q=${searchTerm}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.get('/students/search', {
+        params: { q: searchTerm },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setEstudiantes(response.data.data);
     } catch (error) {
@@ -120,8 +121,8 @@ export const AdminStudentsPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.patch(
-        `http://localhost:3001/api/students/${selectedStudent.id}/baja`,
+      await api.patch(
+        `/students/${selectedStudent.id}/baja`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -141,8 +142,8 @@ export const AdminStudentsPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.delete(
-        `http://localhost:3001/api/students/${selectedStudent.id}/permanent`,
+      await api.delete(
+        `/students/${selectedStudent.id}/permanent`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -174,49 +175,56 @@ export const AdminStudentsPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
-          color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit" onClick={() => navigate('/admin/dashboard')}>
-                <ArrowBack />
-              </IconButton>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Gestión de Estudiantes
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant="outlined"
-                color="inherit"
-                startIcon={<PersonAdd />}
-                onClick={() => navigate('/admin/nuevo-estudiante')}
-                sx={{ borderColor: '#FFFFFF', color: '#FFFFFF' }}
-              >
-                Nuevo Estudiante
-              </Button>
-              <Button
-                variant="outlined"
-                color="inherit"
-                startIcon={<Logout />}
-                onClick={handleLogout}
-                sx={{ borderColor: '#FFFFFF', color: '#FFFFFF' }}
-              >
-                Salir
-              </Button>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
+      <PageHeader
+        title="Gestión de Estudiantes"
+        subtitle="Coordinación académica · Sistema abierto"
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        maxWidth="xl"
+        actions={
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/admin/dashboard')}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Regresar
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<PersonAdd />}
+              onClick={() => navigate('/admin/nuevo-estudiante')}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Nuevo Estudiante
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<Logout />}
+              onClick={handleLogout}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Salir
+            </Button>
+          </Stack>
+        }
+      />
 
       <Container>
         {/* Búsqueda */}

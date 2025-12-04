@@ -25,8 +25,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import axios from 'axios';
 import toast from 'react-hot-toast';
+import api from '../services/api.service';
 
 export const ChangePasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -94,8 +94,8 @@ export const ChangePasswordPage: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
 
-      await axios.post(
-        'http://localhost:3001/api/password/change-first-login',
+      await api.post(
+        '/password/change-first-login',
         {
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,

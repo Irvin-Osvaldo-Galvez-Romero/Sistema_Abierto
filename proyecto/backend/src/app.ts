@@ -91,6 +91,7 @@ import uploadRoutes from './routes/upload.routes';
 import notificacionRoutes from './routes/notificacion.routes';
 import profesorRoutes from './routes/profesor.routes';
 import passwordRoutes from './routes/password.routes';
+import creditoRoutes from './routes/credito.routes';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -121,6 +122,27 @@ app.use('/api/upload', uploadRoutes);
 
 // Rutas de notificaciones
 app.use('/api/notificaciones', notificacionRoutes);
+
+// Rutas de créditos complementarios
+app.use('/api/creditos', creditoRoutes);
+
+// Endpoint raíz de la API
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API del Sistema Universitario funcionando. Consulta la documentación para los endpoints disponibles.',
+    endpoints: {
+      auth: '/api/auth',
+      estudiantes: '/api/students',
+      profesores: '/api/profesores',
+      documentos: '/api/documentos',
+      upload: '/api/upload',
+      notificaciones: '/api/notificaciones',
+      creditos: '/api/creditos',
+      salud: ['/health', '/api/health'],
+    },
+  });
+});
 
 // ==========================================
 // MANEJO DE ERRORES

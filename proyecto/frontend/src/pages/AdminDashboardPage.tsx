@@ -4,7 +4,6 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
   Box,
   Container,
@@ -15,6 +14,7 @@ import {
   Card,
   CardContent,
   IconButton,
+  Stack,
 } from '@mui/material';
 import {
   School,
@@ -27,6 +27,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import api from '../services/api.service';
+import PageHeader from '../components/PageHeader';
 
 export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -60,6 +62,13 @@ export const AdminDashboardPage: React.FC = () => {
       color: '#008000',
       action: () => navigate('/admin/documentos'),
     },
+    {
+      icon: <Assignment sx={{ fontSize: 40 }} />,
+      title: 'Créditos Pendientes',
+      value: '0',
+      color: '#ef4444',
+      action: () => navigate('/admin/creditos'),
+    },
   ]);
 
   useEffect(() => {
@@ -75,26 +84,46 @@ export const AdminDashboardPage: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       
       // Cargar estudiantes
-      const estudiantesRes = await axios.get('http://localhost:3001/api/students', {
+      const estudiantesRes = await api.get('/students', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
       // Cargar docentes
-      const docentesRes = await axios.get('http://localhost:3001/api/profesores', {
+      const docentesRes = await api.get('/profesores', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
       // Cargar documentos
-      const documentosRes = await axios.get('http://localhost:3001/api/documentos', {
+      const documentosRes = await api.get('/documentos', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const creditosRes = await api.get('/creditos', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const estudiantes = estudiantesRes.data.data || [];
       const docentes = docentesRes.data.data || [];
       const documentos = documentosRes.data.data || [];
+      const creditosGrupos = creditosRes.data.data || [];
 
       const pendientes = documentos.filter((d: any) => d.estatus === 'PENDIENTE').length;
       const aprobados = documentos.filter((d: any) => d.estatus === 'APROBADO').length;
+
+      // Los créditos vienen agrupados por estudiante (array de arrays)
+      // Cada elemento del array principal es un array de créditos de un estudiante
+      // Necesitamos aplanar el array para obtener todos los créditos individuales
+      let creditosPendientes = 0;
+      if (Array.isArray(creditosGrupos) && creditosGrupos.length > 0) {
+        try {
+          // Aplanar el array de arrays para obtener todos los créditos
+          const creditosPlano = creditosGrupos.flat();
+          // Filtrar por estatus PENDIENTE y contar
+          creditosPendientes = creditosPlano.filter((c: any) => c && c.estatus === 'PENDIENTE').length;
+        } catch (error) {
+          console.error('Error al procesar créditos:', error);
+          creditosPendientes = 0;
+        }
+      }
 
       setStats([
         {
@@ -125,6 +154,13 @@ export const AdminDashboardPage: React.FC = () => {
           color: '#008000',
           action: () => navigate('/admin/documentos'),
         },
+        {
+          icon: <Assignment sx={{ fontSize: 40 }} />,
+          title: 'Créditos Pendientes',
+          value: creditosPendientes.toString(),
+          color: '#ef4444',
+          action: () => navigate('/admin/creditos'),
+        },
       ]);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
@@ -138,25 +174,15 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
-          color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Panel de Administración
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit">
+      <PageHeader
+        title="Panel de Administración"
+        subtitle="Coordinación de Sistema Abierto · Modalidad Mixta"
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        maxWidth="xl"
+        actions={
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton color="inherit" sx={{ color: '#FFFFFF' }}>
                 <Notifications />
               </IconButton>
               <Button
@@ -175,10 +201,9 @@ export const AdminDashboardPage: React.FC = () => {
               >
                 Cerrar Sesión
               </Button>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
+          </Stack>
+        }
+      />
 
       <Container>
         {/* Bienvenida */}
@@ -295,6 +320,25 @@ export const AdminDashboardPage: React.FC = () => {
               }}
             >
               Revisar Documentos
+            </Button>
+          </Grid>
+          <Grid item xs={12} md={6} lg={4}>
+            <Button
+              fullWidth
+              variant="contained"
+              size="large"
+              startIcon={<Assignment />}
+              onClick={() => navigate('/admin/creditos')}
+              sx={{
+                height: 100,
+                fontSize: '1.1rem',
+                backgroundColor: '#008000',
+                '&:hover': {
+                  backgroundColor: '#006000',
+                },
+              }}
+            >
+              Validar Créditos
             </Button>
           </Grid>
           <Grid item xs={12} md={6}>

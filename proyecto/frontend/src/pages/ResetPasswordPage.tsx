@@ -22,6 +22,8 @@ import {
   Lock,
   School,
   ArrowBack,
+  LockReset,
+  DoneAll,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthService from '../services/auth.service';
@@ -173,14 +175,24 @@ export const ResetPasswordPage: React.FC = () => {
             backdropFilter: 'blur(10px)',
           }}
         >
-          {/* Logo y Título */}
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <School sx={{ fontSize: 60, color: 'primary.main', mb: 1 }} />
-            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <IconButton color="inherit" onClick={() => navigate('/login')}>
+              <ArrowBack />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ textAlign: 'center', mt: 2, mb: 3 }}>
+            <Box
+              component="img"
+              src={`${process.env.PUBLIC_URL}/logo-coordinacion.png`}
+              alt="Coordinación Sistema Abierto"
+              sx={{ width: 80, height: 80, objectFit: 'contain', mb: 1 }}
+            />
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
               Restablecer Contraseña
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Ingresa tu nueva contraseña segura
+            <Typography variant="body2" color="text.secondary">
+              Crea una nueva contraseña segura para continuar en la modalidad abierta.
             </Typography>
           </Box>
 

@@ -18,11 +18,10 @@ import {
   CircularProgress,
 } from '@mui/material';
 import {
-  Visibility,
-  VisibilityOff,
   Email,
   Lock,
-  School,
+  Visibility,
+  VisibilityOff,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -37,6 +36,8 @@ export const LoginPage: React.FC = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+
+  const logoUrl = `${process.env.PUBLIC_URL}/logo-coordinacion.png`;
 
   // Redirigir si ya está autenticado
   useEffect(() => {
@@ -107,12 +108,17 @@ export const LoginPage: React.FC = () => {
         >
           {/* Logo y Título */}
           <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <School sx={{ fontSize: 60, color: 'primary.main', mb: 1 }} />
+            <Box
+              component="img"
+              src={logoUrl}
+              alt="Coordinación Sistema Abierto"
+              sx={{ width: 90, height: 90, objectFit: 'contain', mb: 1 }}
+            />
             <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-              Sistema Universitario
+              Sistema de Reinscripción
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Gestión Documental Digital
+              Modalidad Abierta
             </Typography>
           </Box>
 
@@ -211,11 +217,9 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* Footer */}
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="caption" sx={{ color: '#888888' }}>
-              © 2024 Sistema Universitario. Todos los derechos reservados.
+          <Typography variant="caption" display="block" align="center" sx={{ mt: 4, color: 'text.secondary' }}>
+            © 2025 Sistema de Reinscripción. Todos los derechos reservados.
             </Typography>
-          </Box>
         </Paper>
       </Container>
     </Box>

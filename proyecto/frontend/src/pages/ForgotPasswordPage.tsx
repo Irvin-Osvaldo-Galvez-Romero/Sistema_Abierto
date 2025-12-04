@@ -21,9 +21,11 @@ import {
   IconButton,
 } from '@mui/material';
 import {
-  Email,
-  School,
   ArrowBack,
+  Email,
+  LockReset,
+  MarkEmailRead,
+  NotificationsActive,
   VpnKey,
   Lock,
   Visibility,
@@ -414,25 +416,35 @@ export const ForgotPasswordPage: React.FC = () => {
         padding: 2,
       }}
     >
-      <Container maxWidth="sm">
+      <Container maxWidth="md">
         <Paper
           elevation={10}
           sx={{
             padding: 4,
             borderRadius: 3,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(8px)',
           }}
         >
-          {/* Logo y Título */}
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <School sx={{ fontSize: 60, color: 'primary.main', mb: 1 }} />
-            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-              ¿Olvidaste tu contraseña?
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Restablece tu contraseña siguiendo estos pasos
-            </Typography>
+          {/* Título */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+            <IconButton color="inherit" onClick={() => navigate('/login')}>
+              <ArrowBack />
+            </IconButton>
+            <Box sx={{ textAlign: 'center', flexGrow: 1 }}>
+              <Box
+                component="img"
+                src={`${process.env.PUBLIC_URL}/logo-coordinacion.png`}
+                alt="Coordinación Sistema Abierto"
+                sx={{ width: 80, height: 80, objectFit: 'contain', mb: 1 }}
+              />
+              <Typography variant="h5" fontWeight="bold" gutterBottom>
+                Restablecer contraseña
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Recupera tu acceso al sistema de reinscripción
+              </Typography>
+            </Box>
           </Box>
 
           {/* Stepper */}

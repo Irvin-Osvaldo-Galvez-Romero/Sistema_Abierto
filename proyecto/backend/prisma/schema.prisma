@@ -41,6 +41,7 @@ model Usuario {
   tokens            TokenSesion[]
   actividades       ActividadUsuario[]
   documentosCreados Documento[]         @relation("DocumentoCreador")
+  creditosRevisados CreditoComplementario[] @relation("CreditosRevisados")
 
   @@map("usuarios")
 }
@@ -110,6 +111,7 @@ model Estudiante {
   calificaciones    Calificacion[]
   documentos        DocumentoEstudiante[]
   notificaciones    Notificacion[]
+  creditos          CreditoComplementario[]
   
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -367,6 +369,75 @@ model DocumentoEstudiante {
   @@map("documentos_estudiante")
 }
 
+enum EstatusCreditoComplementario {
+  PENDIENTE
+  EN_REVISION
+  VALIDADO
+  RECHAZADO
+}
+
+enum TipoCreditoComplementario {
+  ACTIVIDADES_EXTRACURRICULARES
+  CURSOS
+  TUTORIAS
+  ACTIVIDADES_CULTURALES
+}
+
+model CreditoComplementario {
+  id                       String                         @id @default(uuid())
+  estudianteId             String
+  estudiante               Estudiante                     @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  numero                   Int
+  tipo                     TipoCreditoComplementario
+  titulo                   String
+  descripcion              String
+  horasCurso               Int?
+  horasTotales             Int?                           // Suma total de horas de todos los archivos
+  estatus                  EstatusCreditoComplementario   @default(PENDIENTE)
+  motivoRechazo            String?
+  observaciones            String?
+  archivoOriginal          String
+  mimeTypeOriginal         String
+  tamanoOriginal           Int
+  hashOriginal             String?
+  archivoCombinado         String?                        // PDF combinado para administradores (solo CURSOS con múltiples archivos)
+  mimeTypeCombinado        String?
+  tamanoCombinado          Int?
+  hashCombinado            String?
+  archivoValidacionGenerada String?
+  archivoValidado          String?
+  mimeTypeValidado         String?
+  tamanoValidado           Int?
+  hashValidado             String?
+  revisadoPorId            String?
+  revisadoPor              Usuario?                       @relation("CreditosRevisados", fields: [revisadoPorId], references: [id])
+  fechaEnvio               DateTime                       @default(now())
+  fechaRevision            DateTime?
+  createdAt                DateTime                       @default(now())
+  updatedAt                DateTime                       @updatedAt
+  
+  // Relación con archivos adicionales (para cursos con múltiples PDFs)
+  archivosAdicionales      ArchivoCredito[]
+
+  @@unique([estudianteId, numero])
+  @@map("creditos_complementarios")
+}
+
+model ArchivoCredito {
+  id                       String                         @id @default(uuid())
+  creditoId                String
+  credito                  CreditoComplementario           @relation(fields: [creditoId], references: [id], onDelete: Cascade)
+  horas                    Int?                           // Horas de este archivo específico (solo para CURSOS)
+  rutaArchivo              String
+  mimeType                 String
+  tamano                   Int
+  hash                     String?
+  nombreOriginal           String?
+  createdAt                DateTime                       @default(now())
+
+  @@map("archivos_credito")
+}
+
 // ==========================================
 // MODELOS DE NOTIFICACIONES
 // ==========================================
@@ -392,6 +463,10 @@ enum TipoNotificacion {
   DOCUMENTO_RECHAZADO
   DOCUMENTO_PENDIENTE
   GENERAL
+  CREDITO_SUBIDO
+  CREDITO_VALIDADO
+  CREDITO_RECHAZADO
+  CREDITO_VALIDACION_GENERADA
 }
 
 // ==========================================

@@ -12,15 +12,14 @@ import {
   Button,
   TextField,
   Grid,
-  IconButton,
   InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Stack,
 } from '@mui/material';
 import {
-  School,
   ArrowBack,
   Save,
   Visibility,
@@ -29,9 +28,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import api from '../services/api.service';
+import PageHeader from '../components/PageHeader';
 
 export const AdminNewStudentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export const AdminNewStudentPage: React.FC = () => {
     const loadCarreras = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:3001/api/carreras', {
+        const response = await api.get('/carreras', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCarreras(response.data.data || []);
@@ -101,8 +101,8 @@ export const AdminNewStudentPage: React.FC = () => {
       const emailCompleto = `${formData.emailUsername}@teschi.edu.mx`;
 
       // 1. Crear usuario (el correo con credenciales se enviará automáticamente)
-      const userResponse = await axios.post(
-        'http://localhost:3001/api/auth/register',
+      const userResponse = await api.post(
+        '/auth/register',
         {
           nombre: formData.nombre,
           apellidoPaterno: formData.apellidoPaterno,
@@ -120,8 +120,8 @@ export const AdminNewStudentPage: React.FC = () => {
       const usuarioId = userResponse.data.data.user.id;
 
       // 2. Crear perfil de estudiante
-      await axios.post(
-        'http://localhost:3001/api/students',
+      await api.post(
+        '/students',
         {
           usuarioId,
           matricula: formData.matricula,
@@ -149,38 +149,43 @@ export const AdminNewStudentPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <Box
+      <PageHeader
+        title="Alta de Estudiante"
+        subtitle="Coordinación académica · Sistema abierto"
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        maxWidth="lg"
+        actions={
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/admin/estudiantes')}
         sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
+                borderColor: '#FFFFFF',
           color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit" onClick={() => navigate('/admin/dashboard')}>
-                <ArrowBack />
-              </IconButton>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Dar de Alta Estudiante
-              </Typography>
-            </Box>
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Regresar
+            </Button>
             <Button
               variant="outlined"
               color="inherit"
               startIcon={<Logout />}
               onClick={handleLogout}
-              sx={{ borderColor: '#FFFFFF', color: '#FFFFFF' }}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
             >
               Salir
             </Button>
-          </Box>
-        </Container>
-      </Box>
+          </Stack>
+        }
+      />
 
       <Container maxWidth="md">
         <Paper sx={{ p: 4, borderRadius: 2 }}>
@@ -275,12 +280,12 @@ export const AdminNewStudentPage: React.FC = () => {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton
+                        {/* <IconButton
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
+                        </IconButton> */}
                       </InputAdornment>
                     ),
                   }}

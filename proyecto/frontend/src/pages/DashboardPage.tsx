@@ -16,16 +16,18 @@ import {
   Button,
   Chip,
   IconButton,
+  Stack,
 } from '@mui/material';
 import {
-  School,
   Description,
   Logout,
   Dashboard as DashboardIcon,
   Notifications,
+  School,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import PageHeader from '../components/PageHeader';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,27 +56,18 @@ export const DashboardPage: React.FC = () => {
     },
   ];
 
+  const logoUrl = `${process.env.PUBLIC_URL}/logo-coordinacion.png`;
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
-          color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Sistema Universitario
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit" onClick={() => navigate('/notificaciones')}>
+      <PageHeader
+        title="Sistema Universitario"
+        subtitle="Coordinación de Sistema Abierto · Modalidad Mixta"
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        actions={
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton color="inherit" onClick={() => navigate('/notificaciones')} sx={{ color: '#FFFFFF' }}>
                 <Notifications />
               </IconButton>
               <Button
@@ -87,16 +80,15 @@ export const DashboardPage: React.FC = () => {
                   color: '#FFFFFF',
                   '&:hover': { 
                     borderColor: '#FFFFFF', 
-                    backgroundColor: 'rgba(255,255,255,0.1)' 
-                  } 
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                },
                 }}
               >
                 Cerrar Sesión
               </Button>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
+          </Stack>
+        }
+      />
 
       <Container>
         {/* Información del Usuario */}
@@ -218,6 +210,30 @@ export const DashboardPage: React.FC = () => {
               Ver Notificaciones
             </Button>
           </Grid>
+          <Grid item xs={12}>
+            <Button
+              fullWidth
+              variant="outlined"
+              size="large"
+              startIcon={<Description />}
+              onClick={() => navigate('/creditos')}
+              sx={{
+                height: 100,
+                borderRadius: 2,
+                fontSize: '1.2rem',
+                borderColor: '#008000',
+                color: '#008000',
+                borderWidth: 2,
+                '&:hover': {
+                  borderColor: '#006000',
+                  color: '#006000',
+                  borderWidth: 2,
+                },
+              }}
+            >
+              Gestionar Créditos Complementarios
+            </Button>
+          </Grid>
         </Grid>
 
         {/* Información Importante */}
@@ -227,7 +243,12 @@ export const DashboardPage: React.FC = () => {
           </Typography>
           <Paper sx={{ p: 4, borderRadius: 2, border: '1px solid #e0e0e0' }}>
             <Box sx={{ textAlign: 'center' }}>
-              <School sx={{ fontSize: 80, color: '#008000', mb: 2 }} />
+              <Box
+                component="img"
+                src={logoUrl}
+                alt="Coordinación"
+                sx={{ width: 100, height: 100, objectFit: 'contain', mb: 2 }}
+              />
               <Typography variant="h5" fontWeight="bold" sx={{ mb: 2, color: '#000000' }}>
                 ¡Bienvenido al Sistema de Reinscripción!
               </Typography>

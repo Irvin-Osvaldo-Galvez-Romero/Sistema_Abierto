@@ -1,0 +1,20 @@
+Credenciales de acceso (contraseñas actualizadas el 2025-11-12)
+----------------------------------------------------------------
+
+SUPER ADMIN / ADMINISTRACIÓN
+- admin@teschi.edu.mx      | Admin123!
+
+ESTUDIANTES
+- 2022452150@teschi.edu.mx | Alumno123!
+- 2022452138@teschi.edu.mx | Alumno123!
+- 2022452166@teschi.edu.mx | Alumno123!
+- 2022452137@teschi.edu.mx | Alumno123!
+- 20224521390@teschi.edu.mx | Alumno123!
+- 202245213939@teschi.edu.mx | Alumno123!
+- 2021452339@teschi.edu.mx | Alumno123!
+- 2022452139@teschi.edu.mx | Alumno123!
+
+Nota:
+- Todas las contraseñas se han restablecido con el script `scripts/reset-passwords.ts`.
+- Cambia las contraseñas en producción por motivos de seguridad.
+

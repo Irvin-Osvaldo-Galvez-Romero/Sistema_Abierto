@@ -17,6 +17,7 @@ import {
   Button,
   Chip,
   Alert,
+  Stack,
 } from '@mui/material';
 import {
   CheckCircle,
@@ -25,12 +26,12 @@ import {
   MarkEmailRead,
   Delete,
   ArrowBack,
-  School,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import axios from 'axios';
 import toast from 'react-hot-toast';
+import api from '../services/api.service';
+import PageHeader from '../components/PageHeader';
 
 interface Notificacion {
   id: string;
@@ -59,7 +60,7 @@ export const NotificationsPage: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:3001/api/notificaciones/my-notifications', {
+      const response = await api.get('/notificaciones/my-notifications', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -74,8 +75,8 @@ export const NotificationsPage: React.FC = () => {
   const markAsRead = async (id: string) => {
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.patch(
-        `http://localhost:3001/api/notificaciones/${id}/read`,
+      await api.patch(
+        `/notificaciones/${id}/read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -93,8 +94,8 @@ export const NotificationsPage: React.FC = () => {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.patch(
-        'http://localhost:3001/api/notificaciones/mark-all-read',
+      await api.patch(
+        '/notificaciones/mark-all-read',
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -134,39 +135,50 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
-          color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit" onClick={() => navigate('/dashboard')}>
-                <ArrowBack />
-              </IconButton>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Notificaciones
-              </Typography>
-            </Box>
+      <PageHeader
+        title="Notificaciones"
+        subtitle="Resumen de movimientos y avisos del sistema"
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        actions={
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/dashboard')}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': {
+                  borderColor: '#FFFFFF',
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                },
+              }}
+            >
+              Regresar
+            </Button>
             {unreadCount > 0 && (
               <Button
                 variant="outlined"
                 color="inherit"
                 startIcon={<MarkEmailRead />}
                 onClick={markAllAsRead}
+                sx={{
+                  borderColor: '#FFFFFF',
+                  color: '#FFFFFF',
+                  '&:hover': {
+                    borderColor: '#FFFFFF',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  },
+                }}
               >
                 Marcar todas como leídas ({unreadCount})
               </Button>
             )}
-          </Box>
-        </Container>
-      </Box>
+          </Stack>
+        }
+      />
 
       <Container>
         {loading ? (

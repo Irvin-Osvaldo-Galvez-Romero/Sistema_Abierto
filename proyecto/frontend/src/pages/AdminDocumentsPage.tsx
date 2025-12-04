@@ -25,9 +25,10 @@ import {
   TextField,
   Tabs,
   Tab,
+  Stack,
+  InputAdornment,
 } from '@mui/material';
 import {
-  School,
   ArrowBack,
   CheckCircle,
   Cancel,
@@ -35,12 +36,14 @@ import {
   Logout,
   Download,
   ViewInAr,
+  Search,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import api from '../services/api.service';
+import PageHeader from '../components/PageHeader';
 
 interface Documento {
   id: string;
@@ -74,6 +77,7 @@ export const AdminDocumentsPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [previewDialog, setPreviewDialog] = useState(false);
+  const [busqueda, setBusqueda] = useState<string>('');
 
   useEffect(() => {
     loadDocuments();
@@ -83,7 +87,7 @@ export const AdminDocumentsPage: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:3001/api/documentos', {
+      const response = await api.get('/documentos', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -105,8 +109,8 @@ export const AdminDocumentsPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.patch(
-        `http://localhost:3001/api/upload/${selectedDoc.id}/review`,
+      await api.patch(
+        `/upload/${selectedDoc.id}/review`,
         {
           aprobado: approving,
           motivoRechazo: approving ? undefined : motivoRechazo,
@@ -137,8 +141,8 @@ export const AdminDocumentsPage: React.FC = () => {
   const handleViewDocument = async (doc: Documento) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:3001/api/upload/view/${doc.id}`,
+      const response = await api.get(
+        `/upload/view/${doc.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob',
@@ -158,8 +162,8 @@ export const AdminDocumentsPage: React.FC = () => {
   const handleDownloadDocument = async (doc: Documento) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:3001/api/upload/download/${doc.id}`,
+      const response = await api.get(
+        `/upload/download/${doc.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob',
@@ -197,46 +201,66 @@ export const AdminDocumentsPage: React.FC = () => {
   };
 
   const filteredDocs = documentos.filter((doc) => {
-    if (tabValue === 0) return doc.estatus === 'PENDIENTE';
-    if (tabValue === 1) return doc.estatus === 'APROBADO';
-    if (tabValue === 2) return doc.estatus === 'RECHAZADO';
-    return true;
+    // Filtro por estatus
+    let passesStatus = true;
+    if (tabValue === 0) passesStatus = doc.estatus === 'PENDIENTE';
+    else if (tabValue === 1) passesStatus = doc.estatus === 'APROBADO';
+    else if (tabValue === 2) passesStatus = doc.estatus === 'RECHAZADO';
+
+    if (!passesStatus) return false;
+
+    // Filtro por búsqueda (nombre o matrícula)
+    if (!busqueda.trim()) return true;
+
+    const terminoBusqueda = busqueda.toLowerCase().trim();
+    const estudiante = doc.documentosEstudiante[0]?.estudiante;
+    if (!estudiante) return false;
+
+    const nombreCompleto = `${estudiante.usuario.nombre} ${estudiante.usuario.apellidoPaterno ?? ''}`.toLowerCase();
+    const matricula = estudiante.matricula?.toLowerCase() || '';
+
+    return nombreCompleto.includes(terminoBusqueda) || matricula.includes(terminoBusqueda);
   });
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
-          color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit" onClick={() => navigate('/admin/dashboard')}>
-                <ArrowBack />
-              </IconButton>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Revisión de Documentos
-              </Typography>
-            </Box>
+      <PageHeader
+        title="Revisión de Documentos"
+        subtitle="Coordinación académica · Sistema abierto"
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        maxWidth="xl"
+        actions={
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/admin/dashboard')}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Regresar
+            </Button>
             <Button
               variant="outlined"
               color="inherit"
               startIcon={<Logout />}
               onClick={handleLogout}
-              sx={{ borderColor: '#FFFFFF', color: '#FFFFFF' }}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
             >
               Salir
             </Button>
-          </Box>
-        </Container>
-      </Box>
+          </Stack>
+        }
+      />
 
       <Container>
         {/* Tabs de filtros */}
@@ -255,6 +279,25 @@ export const AdminDocumentsPage: React.FC = () => {
             <Tab label="Rechazados" />
             <Tab label="Todos" />
           </Tabs>
+        </Paper>
+
+        {/* Buscador */}
+        <Paper sx={{ mb: 3, p: 2, borderRadius: 2 }}>
+          <TextField
+            fullWidth
+            placeholder="Buscar por nombre o matrícula..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ maxWidth: 400 }}
+          />
         </Paper>
 
         {/* Tabla de Documentos */}

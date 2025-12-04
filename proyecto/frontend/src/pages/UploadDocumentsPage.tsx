@@ -18,6 +18,7 @@ import {
   LinearProgress,
   IconButton,
   Badge,
+  Stack,
 } from '@mui/material';
 import {
   CloudUpload,
@@ -25,14 +26,15 @@ import {
   Cancel,
   Pending,
   Notifications,
-  School,
   Logout,
   Dashboard as DashboardIcon,
+  ArrowBack,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../services/api.service';
+import PageHeader from '../components/PageHeader';
 
 interface Documento {
   id: string;
@@ -69,7 +71,7 @@ export const UploadDocumentsPage: React.FC = () => {
   const loadDocuments = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:3001/api/upload/my-documents', {
+      const response = await api.get('/upload/my-documents', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -83,7 +85,8 @@ export const UploadDocumentsPage: React.FC = () => {
   const loadNotifications = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:3001/api/notificaciones/my-notifications?unread=true', {
+      const response = await api.get('/notificaciones/my-notifications', {
+        params: { unread: true },
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -107,7 +110,7 @@ export const UploadDocumentsPage: React.FC = () => {
 
       const token = localStorage.getItem('accessToken');
       
-      await axios.post('http://localhost:3001/api/upload', formData, {
+      await api.post('/upload', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -155,44 +158,50 @@ export const UploadDocumentsPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #008000 0%, #006000 100%)',
-          color: '#FFFFFF',
-          py: 3,
-          mb: 4,
-        }}
-      >
-        <Container>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <School sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight="bold">
-                Mis Documentos
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton color="inherit" onClick={() => navigate('/notificaciones')}>
-                <Badge badgeContent={notificacionesCount} color="error">
-                  <Notifications />
-                </Badge>
-              </IconButton>
-              <IconButton color="inherit" onClick={() => navigate('/dashboard')}>
-                <DashboardIcon />
-              </IconButton>
-              <Button
-                variant="outlined"
-                color="inherit"
-                startIcon={<Logout />}
-                onClick={handleLogout}
-              >
-                Salir
-              </Button>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
+      <PageHeader
+        title="Mis Documentos"
+        subtitle={user ? `Bienvenido, ${user.nombre}` : 'Seguimiento de tu reinscripción digital'}
+        gradientFrom="#008000"
+        gradientTo="#006000"
+        actions={
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<ArrowBack />}
+              onClick={() => navigate('/dashboard')}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Regresar
+            </Button>
+            <IconButton color="inherit" onClick={() => navigate('/notificaciones')} sx={{ color: '#FFFFFF' }}>
+              <Badge badgeContent={notificacionesCount} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+            <IconButton color="inherit" onClick={() => navigate('/dashboard')} sx={{ color: '#FFFFFF' }}>
+              <DashboardIcon />
+            </IconButton>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<Logout />}
+              onClick={handleLogout}
+              sx={{
+                borderColor: '#FFFFFF',
+                color: '#FFFFFF',
+                '&:hover': { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Salir
+            </Button>
+          </Stack>
+        }
+      />
 
       <Container>
         {/* Mensaje de bienvenida */}

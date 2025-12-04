@@ -28,7 +28,7 @@ for (const envVar of requiredEnvVars) {
 export const config = {
   // Servidor
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '3001', 10),
+  port: parseInt(process.env.PORT || '4000', 10),
   host: process.env.HOST || 'localhost',
 
   // Base de datos

@@ -26,6 +26,14 @@ interface CreateStudentData {
 }
 
 interface UpdateStudentData {
+  // Campos del Usuario
+  nombre?: string;
+  apellidoPaterno?: string;
+  apellidoMaterno?: string;
+  email?: string;
+  telefono?: string;
+  // Campos del Estudiante
+  matricula?: string;
   fechaNacimiento?: Date;
   curp?: string;
   nss?: string;
@@ -237,6 +245,14 @@ export class StudentService {
               materia: true,
             },
           },
+          creditos: {
+            include: {
+              archivosAdicionales: {
+                orderBy: { createdAt: 'asc' },
+              },
+            },
+            orderBy: { numero: 'asc' },
+          },
         },
       });
 
@@ -307,6 +323,11 @@ export class StudentService {
       // Verificar si el estudiante existe
       const existing = await prisma.estudiante.findUnique({
         where: { id },
+        select: {
+          id: true,
+          usuarioId: true,
+          matricula: true,
+        },
       });
 
       if (!existing) {
@@ -324,13 +345,74 @@ export class StudentService {
         }
       }
 
+      // Preparar datos para actualizar el estudiante
+      const estudianteData: any = {
+        fechaNacimiento: data.fechaNacimiento ? new Date(data.fechaNacimiento) : undefined,
+      };
+
+      // Si se actualiza la matrícula, verificar que no exista otra con la misma matrícula
+      if (data.matricula) {
+        const matriculaExistente = await prisma.estudiante.findFirst({
+          where: {
+            matricula: data.matricula,
+            id: { not: id },
+          },
+        });
+
+        if (matriculaExistente) {
+          throw new ValidationError('Ya existe un estudiante con esta matrícula');
+        }
+
+        estudianteData.matricula = data.matricula;
+      }
+
+      // Agregar otros campos del estudiante si están presentes
+      if (data.curp !== undefined) estudianteData.curp = data.curp;
+      if (data.nss !== undefined) estudianteData.nss = data.nss;
+      if (data.direccion !== undefined) estudianteData.direccion = data.direccion;
+      if (data.ciudad !== undefined) estudianteData.ciudad = data.ciudad;
+      if (data.estado !== undefined) estudianteData.estado = data.estado;
+      if (data.codigoPostal !== undefined) estudianteData.codigoPostal = data.codigoPostal;
+      if (data.tutorNombre !== undefined) estudianteData.tutorNombre = data.tutorNombre;
+      if (data.tutorTelefono !== undefined) estudianteData.tutorTelefono = data.tutorTelefono;
+      if (data.tutorEmail !== undefined) estudianteData.tutorEmail = data.tutorEmail;
+      if (data.estatus !== undefined) estudianteData.estatus = data.estatus;
+      if (data.carreraId !== undefined) estudianteData.carreraId = data.carreraId || null;
+
+      // Preparar datos para actualizar el usuario
+      const usuarioData: any = {};
+      if (data.nombre !== undefined) usuarioData.nombre = data.nombre;
+      if (data.apellidoPaterno !== undefined) usuarioData.apellidoPaterno = data.apellidoPaterno;
+      if (data.apellidoMaterno !== undefined) usuarioData.apellidoMaterno = data.apellidoMaterno;
+      if (data.email !== undefined) {
+        // Verificar que el email no esté en uso por otro usuario
+        const emailExistente = await prisma.usuario.findFirst({
+          where: {
+            email: data.email,
+            id: { not: existing.usuarioId },
+          },
+        });
+
+        if (emailExistente) {
+          throw new ValidationError('Ya existe un usuario con este email');
+        }
+
+        usuarioData.email = data.email;
+      }
+      if (data.telefono !== undefined) usuarioData.telefono = data.telefono || null;
+
+      // Actualizar usuario si hay cambios
+      if (Object.keys(usuarioData).length > 0) {
+        await prisma.usuario.update({
+          where: { id: existing.usuarioId },
+          data: usuarioData,
+        });
+      }
+
       // Actualizar estudiante
       const estudiante = await prisma.estudiante.update({
         where: { id },
-        data: {
-          ...data,
-          fechaNacimiento: data.fechaNacimiento ? new Date(data.fechaNacimiento) : undefined,
-        },
+        data: estudianteData,
         include: {
           usuario: true,
           carrera: true,
