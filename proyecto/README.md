@@ -84,7 +84,32 @@ sistema-universitario/
 
 ## 🚀 Instalación y Configuración
 
-Ver [docs/INSTALACION.md](docs/INSTALACION.md) para instrucciones detalladas.
+### 📖 Guías de Instalación
+
+- **[GUIA_INSTALACION.md](../GUIA_INSTALACION.md)** - Guía completa y detallada paso a paso
+- **[INSTALACION_RAPIDA.md](../INSTALACION_RAPIDA.md)** - Resumen ejecutivo para instalación rápida
+- **[instalar-sistema.ps1](../instalar-sistema.ps1)** - Script de instalación automática para Windows
+
+### ⚡ Inicio Rápido
+
+1. **Requisitos**: Node.js 18+ instalado
+2. **Backend**: 
+   ```bash
+   cd proyecto/backend
+   npm install
+   # Crear archivo .env desde env.example
+   npx prisma generate
+   npx prisma db push
+   npm run dev
+   ```
+3. **Frontend**: 
+   ```bash
+   cd proyecto/frontend
+   npm install
+   npm start
+   ```
+
+Para más detalles, consulta las guías de instalación arriba.
 
 ## 📖 Documentación
 
