@@ -15,7 +15,9 @@
     "format": "prettier --write src/**/*.ts",
     "migrate": "npx prisma migrate dev",
     "seed": "npx prisma db seed",
-    "create-admin": "node dist/scripts/create-admin.js"
+    "create-admin": "node dist/scripts/create-admin.js",
+    "fix-prisma": "powershell -ExecutionPolicy Bypass -File fix-prisma.ps1",
+    "fix-prisma:bat": "scripts\\fix-prisma-windows.bat"
   },
   "keywords": [
     "universidad",
@@ -82,9 +84,6 @@
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "preset": "ts-jest",
